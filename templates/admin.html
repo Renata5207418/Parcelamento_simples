@@ -1,0 +1,1709 @@
+{% extends "base.html" %}
+{% block title %}
+Administração
+{% endblock %}
+{% block content %}
+<!-- ====================================================== -->
+<!-- CABEÇALHO -->
+<!-- ====================================================== -->
+<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-8">
+    <div>
+        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 mb-2">
+            Sistema
+        </div>
+        <h1 class="text-3xl font-semibold tracking-tight text-zinc-900">
+            Administração
+        </h1>
+        <p class="mt-2 text-sm text-zinc-500">
+            Gerencie certificados, usuários e registros de auditoria.
+        </p>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MENSAGEM GLOBAL -->
+<!-- ====================================================== -->
+<div id="adminMessage" class="hidden mb-6"></div>
+
+<!-- ====================================================== -->
+<!-- ABAS -->
+<!-- ====================================================== -->
+<div class="border-b border-zinc-200 mb-7">
+    <div class="flex gap-7 overflow-x-auto">
+        <button type="button" id="tabCertificados" onclick="selecionarAba('certificados')" class="admin-tab admin-tab-active">
+            <i class="fa-solid fa-certificate"></i>
+            Certificados
+        </button>
+
+        <button type="button" id="tabUsuarios" onclick="selecionarAba('usuarios')" class="admin-tab">
+            <i class="fa-solid fa-users"></i>
+            Usuários
+        </button>
+
+        <button type="button" id="tabAuditoria" onclick="selecionarAba('auditoria')" class="admin-tab">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            Auditoria
+        </button>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- CERTIFICADOS -->
+<!-- ====================================================== -->
+<section id="painelCertificados" class="admin-panel">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div>
+            <h2 class="text-lg font-semibold text-zinc-900">
+                Certificados digitais
+            </h2>
+            <p class="text-sm text-zinc-500 mt-1">
+                Certificados utilizados na comunicação com o SERPRO.
+            </p>
+        </div>
+    </div>
+
+    <!-- CERTIFICADOS ATIVOS -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-7">
+        <!-- MTLS -->
+        <div id="certificadoMTLS" class="app-card">
+            <div class="p-6 animate-pulse text-sm text-zinc-400">
+                Carregando certificado...
+            </div>
+        </div>
+
+        <!-- AUTOR -->
+        <div id="certificadoAUTOR" class="app-card">
+            <div class="p-6 animate-pulse text-sm text-zinc-400">
+                Carregando certificado...
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <section class="app-card overflow-hidden">
+        <div class="px-6 py-5 border-b border-zinc-100">
+            <h3 class="font-semibold text-zinc-900">
+                Histórico de certificados
+            </h3>
+            <p class="text-sm text-zinc-500 mt-1">
+                Certificados atuais e substituídos.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-zinc-50 border-b border-zinc-100">
+                    <tr class="text-left text-xs uppercase tracking-wider text-zinc-400">
+                        <th class="px-6 py-3.5 font-semibold">
+                            Tipo
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Arquivo
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Titular
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Validade
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelaCertificados" class="divide-y divide-zinc-100">
+                    <tr>
+                        <td colspan="5" class="text-center px-6 py-12 text-zinc-400">
+                            Carregando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<!-- ====================================================== -->
+<!-- USUÁRIOS -->
+<!-- ====================================================== -->
+<section id="painelUsuarios" class="admin-panel hidden">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+        <div>
+            <h2 class="text-lg font-semibold text-zinc-900">
+                Usuários
+            </h2>
+            <p class="text-sm text-zinc-500 mt-1">
+                Controle de acesso ao sistema.
+            </p>
+        </div>
+        <button type="button" onclick="abrirModalNovoUsuario()" class="btn-dark">
+            <i class="fa-solid fa-plus"></i>
+            Novo usuário
+        </button>
+    </div>
+
+    <!-- PESQUISA -->
+    <div class="app-card p-4 mb-5">
+        <div class="relative max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm"></i>
+            <input type="text" id="pesquisaUsuario" class="form-input pl-10" placeholder="Buscar por nome ou usuário..." oninput="filtrarUsuarios()">
+        </div>
+    </div>
+
+    <!-- TABELA -->
+    <section class="app-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-zinc-50 border-b border-zinc-100">
+                    <tr class="text-left text-xs uppercase tracking-wider text-zinc-400">
+                        <th class="px-6 py-3.5 font-semibold">
+                            Usuário
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Perfil
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Status
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold">
+                            Último acesso
+                        </th>
+                        <th class="px-6 py-3.5 font-semibold text-right">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelaUsuarios" class="divide-y divide-zinc-100">
+                    <tr>
+                        <td colspan="5" class="text-center px-6 py-12 text-zinc-400">
+                            Carregando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<!-- ====================================================== -->
+<!-- AUDITORIA -->
+<!-- ====================================================== -->
+<section id="painelAuditoria" class="admin-panel hidden">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
+        <div>
+            <h2 class="text-lg font-semibold text-zinc-900">Auditoria</h2>
+            <p class="text-sm text-zinc-500 mt-1">Histórico de ações realizadas no sistema.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div>
+                <label for="filtroMesAuditoria" class="block text-xs font-medium uppercase tracking-wide text-zinc-400 mb-1.5">Mês</label>
+                <div class="flex gap-2">
+                    <input type="month" id="filtroMesAuditoria" class="form-input min-w-[165px]" onchange="alterarMesAuditoria()">
+                    <button type="button" onclick="limparFiltroMesAuditoria()" class="btn-light whitespace-nowrap">Todos</button>
+                </div>
+            </div>
+
+            <div>
+                <label for="auditoriaPorPagina" class="block text-xs font-medium uppercase tracking-wide text-zinc-400 mb-1.5">Por página</label>
+                <select id="auditoriaPorPagina" class="form-select min-w-[110px]" onchange="alterarPorPaginaAuditoria()">
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <section class="app-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-zinc-50 border-b border-zinc-100">
+                    <tr class="text-left text-xs uppercase tracking-wider text-zinc-400">
+                        <th class="px-6 py-3.5 font-semibold">Data</th>
+                        <th class="px-6 py-3.5 font-semibold">Usuário</th>
+                        <th class="px-6 py-3.5 font-semibold">Ação</th>
+                        <th class="px-6 py-3.5 font-semibold">Entidade</th>
+                        <th class="px-6 py-3.5 font-semibold">Resultado</th>
+                        <th class="px-6 py-3.5 font-semibold">Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaAuditoria" class="divide-y divide-zinc-100">
+                    <tr><td colspan="6" class="text-center px-6 py-12 text-zinc-400">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/40">
+            <div id="auditoriaResumo" class="text-xs text-zinc-500">Carregando...</div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="auditoriaAnterior" onclick="mudarPaginaAuditoria(-1)" class="btn-light disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+                <span id="auditoriaPagina" class="min-w-[90px] text-center text-xs font-medium text-zinc-600">Página 1 de 1</span>
+                <button type="button" id="auditoriaProxima" onclick="mudarPaginaAuditoria(1)" class="btn-light disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- ====================================================== -->
+<!-- MODAL CERTIFICADO -->
+<!-- ====================================================== -->
+<div id="modalCertificado" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] items-center justify-center p-5">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
+            <div>
+                <h3 id="tituloModalCertificado" class="font-semibold text-zinc-900">
+                    Substituir certificado
+                </h3>
+                <p id="subtituloModalCertificado" class="text-sm text-zinc-500 mt-1"></p>
+            </div>
+            <button type="button" onclick="fecharModalCertificado()" class="w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="formCertificado" class="p-6 space-y-5">
+            <input type="hidden" id="certificadoTipo" name="tipo">
+            <div>
+                <label for="certificadoArquivo" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Arquivo do certificado
+                </label>
+                <input type="file" id="certificadoArquivo" name="arquivo" accept=".pfx,.p12" class="form-input" required>
+                <p class="mt-2 text-xs text-zinc-400">
+                    Formatos permitidos: .pfx e .p12
+                </p>
+            </div>
+            <div>
+                <label for="certificadoSenha" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Senha do certificado
+                </label>
+                <input type="password" id="certificadoSenha" name="senha" class="form-input" autocomplete="new-password" required>
+            </div>
+
+            <div class="bg-zinc-50 rounded-xl px-4 py-3 text-xs text-zinc-500 leading-5">
+                O novo certificado será validado antes de ser ativado.
+                O certificado atual será mantido no histórico.
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="fecharModalCertificado()" class="btn-light">
+                    Cancelar
+                </button>
+                <button type="submit" id="botaoSalvarCertificado" class="btn-dark">
+                    Salvar certificado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL NOVO / EDITAR USUÁRIO -->
+<!-- ====================================================== -->
+<div id="modalUsuario" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] items-center justify-center p-5">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
+            <div>
+                <h3 id="tituloModalUsuario" class="font-semibold text-zinc-900">
+                    Novo usuário
+                </h3>
+            </div>
+
+            <button type="button" onclick="fecharModalUsuario()" class="w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="formUsuario" class="p-6 space-y-5">
+            <input type="hidden" id="usuarioId">
+            <div
+                id="mensagemModalUsuario"
+                class="hidden"
+                aria-live="polite">
+            </div>
+            <div>
+                <label for="usuarioNome" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Nome
+                </label>
+                <input type="text" id="usuarioNome" class="form-input" required>
+            </div>
+
+            <div>
+                <label for="usuarioUsername" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Usuário / e-mail
+                </label>
+                <input type="text" id="usuarioUsername" class="form-input" required>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label for="usuarioRole" class="block text-sm font-medium text-zinc-700 mb-2">
+                        Perfil
+                    </label>
+                    <select id="usuarioRole" class="form-select">
+                        <option value="USER"> Usuário</option>
+                        <option value="ADMIN"> Administrador</option>
+                    </select>
+                </div>
+
+                <div id="grupoUsuarioAtivo">
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">
+                        Status
+                    </label>
+                    <label class="min-h-[44px] flex items-center gap-3 px-3 border border-zinc-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="usuarioAtivo" checked>
+                        <span class="text-sm text-zinc-700">
+                            Usuário ativo
+                        </span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- SOMENTE NOVO USUÁRIO -->
+            <div id="grupoSenhaNovoUsuario">
+                <label for="usuarioSenha" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Senha inicial
+                </label>
+
+                <div class="relative">
+                    <input type="password" id="usuarioSenha" class="form-input pr-12" autocomplete="new-password">
+                    <button
+                        type="button"
+                        data-password-target="usuarioSenha"
+                        onclick="alternarVisibilidadeSenha('usuarioSenha', this)"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                        aria-label="Mostrar senha"
+                        title="Mostrar senha">
+                        <i class="fa-regular fa-eye"></i>
+
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-400 mt-2">
+                    Mínimo de 10 caracteres, com maiúscula,
+                    minúscula e número.
+                </p>
+            </div>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" id="usuarioTrocarSenha" class="mt-1" checked>
+                <div>
+                    <div class="text-sm font-medium text-zinc-700">
+                        Exigir troca de senha
+                    </div>
+
+                    <div class="text-xs text-zinc-400 mt-1">
+                        O usuário deverá definir uma nova senha no próximo acesso.
+                    </div>
+                </div>
+            </label>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="fecharModalUsuario()" class="btn-light">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="btn-dark">
+                    Salvar usuário
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL REDEFINIR SENHA -->
+<!-- ====================================================== -->
+<div id="modalSenha" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] items-center justify-center p-5">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-5 border-b border-zinc-100">
+            <h3 class="font-semibold text-zinc-900">
+                Redefinir senha
+            </h3>
+            <p id="senhaUsuarioNome" class="text-sm text-zinc-500 mt-1"></p>
+        </div>
+
+        <form id="formSenha" class="p-6 space-y-5">
+            <input type="hidden" id="senhaUsuarioId">
+            <div
+                id="mensagemModalSenha"
+                class="hidden"
+                aria-live="polite">
+            </div>
+            <div>
+                <label for="novaSenhaAdmin" class="block text-sm font-medium text-zinc-700 mb-2">
+                    Nova senha
+                </label>
+                <div class="relative">
+                    <input type="password" id="novaSenhaAdmin" class="form-input pr-12" autocomplete="new-password" required>
+                    <button
+                        type="button"
+                        data-password-target="novaSenhaAdmin"
+                        onclick="alternarVisibilidadeSenha('novaSenhaAdmin', this)"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                        aria-label="Mostrar senha"
+                        title="Mostrar senha">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-400 mt-2">
+                    Mínimo de 10 caracteres, com maiúscula,
+                    minúscula e número.
+                </p>
+            </div>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" id="forcarTrocaSenha" class="mt-1" checked>
+                <div>
+                    <div class="text-sm font-medium text-zinc-700">
+                        Exigir nova senha no próximo login
+                    </div>
+                </div>
+
+            </label>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="fecharModalSenha()" class="btn-light">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-dark">
+                    Redefinir senha
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL DETALHES AUDITORIA -->
+<!-- ====================================================== -->
+<div id="modalDetalhesAuditoria" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px] items-center justify-center p-5">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[75vh] overflow-hidden flex flex-col">
+        <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-zinc-100">
+            <div>
+                <h3 id="auditoriaDetalhesTitulo" class="font-semibold text-zinc-900">
+                    Detalhes da auditoria
+                </h3>
+                <p id="auditoriaDetalhesSubtitulo" class="text-sm text-zinc-500 mt-1"></p>
+            </div>
+
+            <button type="button" onclick="fecharModal('modalDetalhesAuditoria')" class="shrink-0 w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div id="auditoriaDetalhesConteudo" class="px-6 py-3 overflow-y-auto"></div>
+        <div class="flex justify-end px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
+            <button type="button" onclick="fecharModal('modalDetalhesAuditoria')" class="btn-light">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+
+// ======================================================
+// ESTADO
+// ======================================================
+const adminState = {
+    usuarios: [],
+    certificados: [],
+    auditorias: [],
+    auditoriaPagina: 1,
+    auditoriaPorPagina: 25,
+    auditoriaTotal: 0,
+    auditoriaTotalPaginas: 0,
+    auditoriaMes: "",
+    auditoriaCacheMes: [],
+    auditoriaCacheMesChave: null
+};
+// ======================================================
+// API
+// ======================================================
+async function apiRequest(url, options = {}) {
+    const headers = options.headers
+        || {};
+    headers["Accept"] =
+        "application/json";
+    options.headers =
+        headers;
+    options.credentials =
+        "same-origin";
+    const response = await fetch(url, options);
+    let data = {};
+    try {
+        data =
+            await response.json();
+    }
+    catch (error) {
+        data = {};
+    }
+    if (!response.ok
+        || data.success === false) {
+        throw new Error(data.message
+            || data.error
+            || ("Erro HTTP "
+                + response.status));
+    }
+    return data;
+}
+function dadosResposta(data) {
+    return (data
+        && data.data)
+        ? data.data
+        : (data
+            || {});
+}
+// ======================================================
+// SEGURANÇA HTML
+// ======================================================
+function escapeHtml(valor) {
+    return String(valor
+        ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+// ======================================================
+// SENHAS / VISIBILIDADE / VALIDAÇÃO
+// ======================================================
+function alternarVisibilidadeSenha(inputId, botao) {
+    const input =
+        document.getElementById(inputId);
+
+    if (!input) {
+        return;
+    }
+
+    const icone = botao.querySelector("i");
+    const mostrar = input.type === "password";
+    input.type =
+        mostrar
+            ? "text"
+            : "password";
+
+    if (icone) {
+        icone.classList.remove(
+            mostrar
+                ? "fa-eye"
+                : "fa-eye-slash"
+        );
+
+        icone.classList.add(
+            mostrar
+                ? "fa-eye-slash"
+                : "fa-eye"
+        );
+    }
+
+    const texto =
+        mostrar
+            ? "Ocultar senha"
+            : "Mostrar senha";
+
+    botao.setAttribute("aria-label", texto);
+    botao.setAttribute("title", texto);
+}
+
+function ocultarSenha(inputId) {
+    const input =
+        document.getElementById(inputId);
+
+    if (!input) {
+        return;
+    }
+
+    input.type = "password";
+
+    const botao =
+        document.querySelector(`[data-password-target="${inputId}"]`);
+
+    if (!botao) {
+        return;
+    }
+
+    const icone = botao.querySelector("i");
+
+    if (icone) {
+        icone.classList.remove("fa-eye-slash");
+        icone.classList.add("fa-eye");
+    }
+
+    botao.setAttribute(
+        "aria-label",
+        "Mostrar senha"
+    );
+
+    botao.setAttribute(
+        "title",
+        "Mostrar senha"
+    );
+}
+
+function validarSenhaUsuario(senha) {
+    if (!senha) {
+        return "Informe a senha.";
+    }
+
+    if (senha.length < 10) {
+        return "A senha deve possuir pelo menos 10 caracteres.";
+    }
+
+    if (!/[A-Z]/.test(senha)) {
+        return "A senha deve possuir pelo menos uma letra maiúscula.";
+    }
+
+    if (!/[a-z]/.test(senha)) {
+        return "A senha deve possuir pelo menos uma letra minúscula.";
+    }
+
+    if (!/[0-9]/.test(senha)) {
+        return "A senha deve possuir pelo menos um número.";
+    }
+    return "";
+}
+
+function mostrarMensagemModal(elementoId, tipo, mensagem) {
+    const elemento =
+        document.getElementById(elementoId);
+
+    if (!elemento) {
+        return;
+    }
+
+    const estilos = {
+        success: "bg-emerald-50 border-emerald-200 text-emerald-700",
+        error: "bg-red-50 border-red-200 text-red-700",
+        info: "bg-zinc-100 border-zinc-200 text-zinc-700"
+    };
+
+    elemento.className =
+        `
+            px-4
+            py-3
+            border
+            rounded-xl
+            text-sm
+            ${estilos[tipo]
+                || estilos.info}
+        `;
+
+    elemento.textContent =
+        mensagem;
+}
+
+function limparMensagemModal(elementoId) {
+    const elemento =
+        document.getElementById(elementoId);
+
+    if (!elemento) {
+        return;
+    }
+
+    elemento.textContent =
+        "";
+
+    elemento.className =
+        "hidden";
+}
+
+// ======================================================
+// MENSAGENS
+// ======================================================
+function mostrarAdminMensagem(tipo, mensagem) {
+    const elemento = document.getElementById("adminMessage");
+    const estilos = {
+        success: "bg-emerald-50 border-emerald-200 text-emerald-700",
+        error: "bg-red-50 border-red-200 text-red-700",
+        info: "bg-zinc-100 border-zinc-200 text-zinc-700"
+    };
+    elemento.className =
+        `
+            mb-6
+            px-4
+            py-3
+            border
+            rounded-xl
+            text-sm
+            ${estilos[tipo]
+            || estilos.info}
+            `;
+    elemento.textContent =
+        mensagem;
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+// ======================================================
+// ABAS
+// ======================================================
+function selecionarAba(nome) {
+    document
+        .querySelectorAll(".admin-panel")
+        .forEach(elemento => {
+        elemento
+            .classList
+            .add("hidden");
+    });
+    document
+        .querySelectorAll(".admin-tab")
+        .forEach(elemento => {
+        elemento
+            .classList
+            .remove("admin-tab-active");
+    });
+    const painel = document.getElementById("painel"
+        + nome.charAt(0).toUpperCase()
+        + nome.slice(1));
+    const botao = document.getElementById("tab"
+        + nome.charAt(0).toUpperCase()
+        + nome.slice(1));
+    painel.classList.remove("hidden");
+    botao.classList.add("admin-tab-active");
+}
+
+// ======================================================
+// DATAS
+// ======================================================
+function formatarData(valor, comHora = false) {
+    if (!valor) {
+        return "—";
+    }
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) {
+        return valor;
+    }
+    return new Intl.DateTimeFormat("pt-BR", comHora
+        ? {
+            dateStyle: "short",
+            timeStyle: "short"
+        }
+        : {
+            dateStyle: "short"
+        }).format(data);
+}
+
+// ======================================================
+// CERTIFICADOS
+// ======================================================
+async function carregarCertificados() {
+    try {
+        const resposta = await apiRequest("/api/admin/certificados?somente_ativos=false");
+        const dados = dadosResposta(resposta);
+        adminState.certificados =
+            dados.certificados
+                || resposta.certificados
+                || [];
+        renderizarCertificados();
+    }
+    catch (error) {
+        mostrarAdminMensagem("error", error.message);
+    }
+}
+function certificadoAtivo(tipo) {
+    return (adminState.certificados
+        .find(item => item.tipo === tipo
+        && item.ativo)
+        || null);
+}
+function diasRestantesCertificado(certificado) {
+    if (!certificado
+        || !certificado.valido_ate) {
+        return null;
+    }
+    const agora = new Date();
+    const vencimento = new Date(certificado.valido_ate);
+    return Math.ceil((vencimento.getTime()
+        - agora.getTime())
+        /
+            (1000
+                * 60
+                * 60
+                * 24));
+}
+function statusCertificado(certificado) {
+    if (!certificado) {
+        return {
+            texto: "Não cadastrado",
+            classe: "text-zinc-500 bg-zinc-100",
+            ponto: "bg-zinc-400"
+        };
+    }
+    const dias = diasRestantesCertificado(certificado);
+    if (dias !== null
+        && dias < 0) {
+        return {
+            texto: "Vencido",
+            classe: "text-red-700 bg-red-50",
+            ponto: "bg-red-500"
+        };
+    }
+    if (dias !== null
+        && dias <= 30) {
+        return {
+            texto: "Vence em breve",
+            classe: "text-amber-700 bg-amber-50",
+            ponto: "bg-amber-500"
+        };
+    }
+    return {
+        texto: "Válido",
+        classe: "text-emerald-700 bg-emerald-50",
+        ponto: "bg-emerald-500"
+    };
+}
+function montarCardCertificado(tipo, titulo, descricao) {
+    const certificado = certificadoAtivo(tipo);
+    const status = statusCertificado(certificado);
+    if (!certificado) {
+        return `
+                <div class="p-6">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-accent-500"></span>
+                                <h3 class="font-semibold text-zinc-900">
+                                    ${escapeHtml(titulo)}
+                                </h3>
+                            </div>
+                            <p class="text-sm text-zinc-500 mt-2">
+                                ${escapeHtml(descricao)}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-7 py-8 text-center border border-dashed border-zinc-200 rounded-xl">
+                        <div class="text-sm text-zinc-500">
+                            Nenhum certificado ativo.
+                        </div>
+                        <button type="button" onclick="abrirModalCertificado('${tipo}')" class="btn-dark mt-4">
+                            <i class="fa-solid fa-upload"></i>
+                            Cadastrar certificado
+                        </button>
+                    </div>
+                </div>
+            `;
+    }
+    const dias = diasRestantesCertificado(certificado);
+    const textoDias = dias === null
+        ? ""
+        : (dias >= 0
+            ? `${dias} dias restantes`
+            : `Vencido há ${Math.abs(dias)} dias`);
+    return `
+            <div class="p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-accent-500"></span>
+                            <h3 class="font-semibold text-zinc-900">
+                                ${escapeHtml(titulo)}
+                            </h3>
+                        </div>
+                        <p class="text-sm text-zinc-500 mt-2">
+                            ${escapeHtml(descricao)}
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.classe}">
+                        <span class="w-1.5 h-1.5 rounded-full ${status.ponto}"></span>
+                        ${status.texto}
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5 mt-7">
+                    ${campoCertificado("Titular", certificado.titular || "Não identificado")}
+                    ${campoCertificado("CNPJ", certificado.cnpj || "Não identificado")}
+                    ${campoCertificado("Válido até", formatarData(certificado.valido_ate))}
+                    ${campoCertificado("Validade", textoDias || "—")}
+                </div>
+                <div class="mt-6 pt-5 border-t border-zinc-100 flex items-center justify-between gap-4">
+                    <div class="text-xs text-zinc-400 truncate">
+                        ${escapeHtml(certificado.nome_original || "")}
+                    </div>
+
+                    <button type="button" onclick="abrirModalCertificado('${tipo}')" class="btn-light">
+                        <i class="fa-solid fa-rotate"></i>
+                        Substituir
+                    </button>
+                </div>
+            </div>
+        `;
+}
+
+function campoCertificado(label, valor) {
+    return `
+            <div>
+                <div class="text-xs text-zinc-400 mb-1">
+                    ${escapeHtml(label)}
+                </div>
+                <div class="text-sm font-medium text-zinc-700 break-words">
+                    ${escapeHtml(valor)}
+                </div>
+            </div>
+        `;
+}
+
+function renderizarCertificados() {
+    document.getElementById("certificadoMTLS").innerHTML =
+        montarCardCertificado("MTLS", "Autenticação SERPRO", "Certificado utilizado na autenticação mTLS.");
+    document.getElementById("certificadoAUTOR").innerHTML =
+        montarCardCertificado("AUTOR", "Assinatura do procurador", "Certificado utilizado para assinatura do termo.");
+    const tabela = document.getElementById("tabelaCertificados");
+    if (adminState.certificados.length === 0) {
+        tabela.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-zinc-400">
+                        Nenhum certificado cadastrado.
+                    </td>
+                </tr>
+            `;
+        return;
+    }
+    tabela.innerHTML =
+        adminState.certificados
+            .map(certificado => {
+            const status = statusCertificado(certificado);
+            return `
+                        <tr class="hover:bg-zinc-50/60">
+                            <td class="px-6 py-4 font-medium text-zinc-800">
+                                ${escapeHtml(certificado.tipo)}
+                            </td>
+                            <td class="px-6 py-4 text-zinc-500">
+                                ${escapeHtml(certificado.nome_original || "—")}
+                            </td>
+                            <td class="px-6 py-4 text-zinc-500">
+                                ${escapeHtml(certificado.titular  || "—")}
+                            </td>
+                            <td class="px-6 py-4 text-zinc-500">
+                                ${formatarData(certificado.valido_ate)}
+                            </td>
+                            <td class="px-6 py-4">
+
+                                ${certificado.ativo
+                ? `
+                                        <span class="text-xs font-medium ${status.classe} px-2 py-1 rounded-full">
+                                            ${status.texto}
+                                        </span>
+                                    `
+                : `
+                                        <span class="text-xs text-zinc-400">
+                                            Substituído
+                                        </span>
+                                    `}
+
+                            </td>
+
+                        </tr>
+                    `;
+        })
+            .join("");
+}
+
+function abrirModalCertificado(tipo) {
+    document.getElementById("certificadoTipo").value =
+        tipo;
+    document.getElementById("tituloModalCertificado").textContent =
+        certificadoAtivo(tipo)
+            ? "Substituir certificado"
+            : "Cadastrar certificado";
+    document.getElementById("subtituloModalCertificado").textContent =
+        tipo === "MTLS"
+            ? "Autenticação SERPRO"
+            : "Assinatura do procurador";
+    abrirModal("modalCertificado");
+}
+
+function fecharModalCertificado() {
+    document.getElementById("formCertificado").reset();
+    fecharModal("modalCertificado");
+}
+
+document.getElementById("formCertificado").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const botao = document.getElementById("botaoSalvarCertificado");
+    botao.disabled =
+        true;
+    const textoOriginal = botao.innerHTML;
+    botao.innerHTML =
+        `
+                    <span class="spinner"></span>
+                    Validando...
+                `;
+    try {
+        const formData = new FormData(this);
+        const resposta = await apiRequest("/api/admin/certificados", {
+            method: "POST",
+            body: formData
+        });
+        fecharModalCertificado();
+        mostrarAdminMensagem("success", resposta.message
+            || "Certificado atualizado com sucesso.");
+        await carregarCertificados();
+    }
+    catch (error) {
+        mostrarAdminMensagem("error", error.message);
+    }
+    finally {
+        botao.disabled =
+            false;
+        botao.innerHTML =
+            textoOriginal;
+    }
+});
+
+// ======================================================
+// USUÁRIOS
+// ======================================================
+async function carregarUsuarios() {
+    try {
+        const resposta = await apiRequest("/api/admin/usuarios");
+        const dados = dadosResposta(resposta);
+        adminState.usuarios =
+            dados.usuarios
+                || resposta.usuarios
+                || [];
+        renderizarUsuarios(adminState.usuarios);
+    }
+    catch (error) {
+        mostrarAdminMensagem("error", error.message);
+    }
+}
+
+function renderizarUsuarios(usuarios) {
+    const tabela = document.getElementById("tabelaUsuarios");
+    if (usuarios.length === 0) {
+        tabela.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center px-6 py-12 text-zinc-400">
+                        Nenhum usuário encontrado.
+                    </td>
+                </tr>
+            `;
+        return;
+    }
+    tabela.innerHTML =
+        usuarios
+            .map(usuario => {
+            return `
+                        <tr class="hover:bg-zinc-50/60">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-zinc-800">
+                                    ${escapeHtml(usuario.nome || usuario.username)}
+                                </div>
+
+                                <div class="text-xs text-zinc-400 mt-1">
+                                    ${escapeHtml(usuario.username)}
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-zinc-100 text-zinc-600">
+                                    ${escapeHtml(usuario.role)}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                ${usuario.ativo  ? `
+                                        <span class="inline-flex items-center gap-1.5 text-xs text-emerald-700">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Ativo
+                                        </span>
+                                    `
+                : `
+                                        <span class="inline-flex items-center gap-1.5 text-xs text-zinc-400">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                                            Inativo
+                                        </span>
+                                    `}
+                            </td>
+
+                            <td class="px-6 py-4 text-zinc-500">
+                                ${formatarData(usuario.ultimo_login, true)}
+                            </td>
+
+                            <td class="px-6 py-4 text-right">
+                                <div class="inline-flex items-center gap-4">
+                                    <button type="button" onclick="editarUsuario(${usuario.id})" class="text-sm font-medium text-zinc-600 hover:text-zinc-950">
+                                        Editar
+                                    </button>
+                                    <button type="button" onclick="abrirModalSenha(${usuario.id})" class="text-sm font-medium text-zinc-400 hover:text-zinc-800">
+                                        Senha
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+        })
+            .join("");
+}
+
+function filtrarUsuarios() {
+    const termo = document.getElementById("pesquisaUsuario")
+        .value
+        .trim()
+        .toLowerCase();
+    const filtrados = adminState.usuarios
+        .filter(usuario => {
+        const nome = String(usuario.nome
+            || "")
+            .toLowerCase();
+        const username = String(usuario.username
+            || "")
+            .toLowerCase();
+        return (nome.includes(termo)
+            ||
+                username.includes(termo));
+    });
+    renderizarUsuarios(filtrados);
+}
+
+function abrirModalNovoUsuario() {
+    document.getElementById("formUsuario").reset();
+    limparMensagemModal("mensagemModalUsuario");
+    ocultarSenha("usuarioSenha");
+    document.getElementById("usuarioId").value = "";
+    document.getElementById("tituloModalUsuario").textContent = "Novo usuário";
+    document.getElementById("grupoSenhaNovoUsuario").classList.remove("hidden");
+    document.getElementById("grupoUsuarioAtivo").classList.add("hidden");
+    document.getElementById("usuarioTrocarSenha").checked = true;
+    abrirModal("modalUsuario");
+}
+
+function editarUsuario(id) {
+    const usuario = adminState.usuarios
+        .find(item => Number(item.id)
+        === Number(id));
+
+    if (!usuario) {
+        return;
+    }
+
+    limparMensagemModal("mensagemModalUsuario");
+
+    document.getElementById("usuarioId").value =
+        usuario.id;
+    document.getElementById("usuarioNome").value =
+        usuario.nome
+            || "";
+    document.getElementById("usuarioUsername").value =
+        usuario.username
+            || "";
+    document.getElementById("usuarioRole").value =
+        usuario.role
+            || "USER";
+    document.getElementById("usuarioAtivo").checked =
+        Boolean(usuario.ativo);
+    document.getElementById("usuarioTrocarSenha").checked =
+        Boolean(usuario
+            .trocar_senha_proximo_login);
+    document.getElementById("tituloModalUsuario").textContent =
+        "Editar usuário";
+    document.getElementById("grupoSenhaNovoUsuario").classList.add("hidden");
+    document.getElementById("grupoUsuarioAtivo").classList.remove("hidden");
+    abrirModal("modalUsuario");
+}
+
+function fecharModalUsuario() {
+    fecharModal("modalUsuario");
+}
+
+document.getElementById("formUsuario").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    limparMensagemModal("mensagemModalUsuario");
+    const id =  document.getElementById("usuarioId").value;
+    const payload = {
+        nome: document.getElementById("usuarioNome").value.trim(),
+        username: document.getElementById("usuarioUsername").value.trim(),
+        role: document.getElementById("usuarioRole").value,
+        trocar_senha_proximo_login: document.getElementById("usuarioTrocarSenha").checked
+    };
+
+    let url = "/api/admin/usuarios";
+    let metodo = "POST";
+
+    if (id) {
+        url +=
+            "/"
+                + id;
+
+        metodo = "PATCH";
+
+        payload.ativo =
+            document.getElementById("usuarioAtivo").checked;
+    }
+    else {
+        const password =
+            document.getElementById("usuarioSenha").value;
+
+        const erroSenha =
+            validarSenhaUsuario(password);
+
+        if (erroSenha) {
+            mostrarMensagemModal(
+                "mensagemModalUsuario",
+                "error",
+                erroSenha
+            );
+
+            return;
+        }
+
+        payload.password =
+            password;
+    }
+
+    try {
+        const resposta = await apiRequest(url, {
+            method: metodo,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        fecharModalUsuario();
+
+        mostrarAdminMensagem(
+            "success",
+            resposta.message
+                || "Usuário salvo com sucesso."
+        );
+
+        await carregarUsuarios();
+    }
+    catch (error) {
+        mostrarMensagemModal(
+            "mensagemModalUsuario",
+            "error",
+            error.message
+        );
+    }
+});
+
+// ======================================================
+// SENHA
+// ======================================================
+function abrirModalSenha(id) {
+    const usuario = adminState.usuarios
+        .find(item => Number(item.id)
+        === Number(id));
+    if (!usuario) {
+        return;
+    }
+
+    document.getElementById("formSenha").reset();
+    limparMensagemModal("mensagemModalSenha");
+    ocultarSenha("novaSenhaAdmin");
+    document.getElementById("senhaUsuarioId").value = usuario.id;
+    document.getElementById("senhaUsuarioNome").textContent = usuario.nome || usuario.username;
+    document.getElementById("forcarTrocaSenha").checked = true;
+    abrirModal("modalSenha");
+}
+
+function fecharModalSenha() {
+    fecharModal("modalSenha");
+}
+
+document.getElementById("formSenha").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    limparMensagemModal("mensagemModalSenha");
+    const id = document.getElementById("senhaUsuarioId").value;
+    const password = document.getElementById("novaSenhaAdmin").value;
+    const erroSenha = validarSenhaUsuario(password);
+
+    if (erroSenha) {
+        mostrarMensagemModal(
+            "mensagemModalSenha",
+            "error",
+            erroSenha
+        );
+        return;
+    }
+
+    try {
+        const resposta = await apiRequest(
+            "/api/admin/usuarios/"
+                + id
+                + "/redefinir-senha",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    password: password,
+                    trocar_senha_proximo_login: document.getElementById("forcarTrocaSenha").checked
+                })
+            }
+        );
+
+        fecharModalSenha();
+
+        mostrarAdminMensagem(
+            "success",
+            resposta.message
+                || "Senha redefinida com sucesso."
+        );
+
+        await carregarUsuarios();
+    }
+    catch (error) {
+        mostrarMensagemModal(
+            "mensagemModalSenha",
+            "error",
+            error.message
+        );
+    }
+});
+
+// ======================================================
+// AUDITORIA
+// ======================================================
+function obterMesAtual() {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, "0");
+    return `${ano}-${mes}`;
+}
+
+function montarUrlAuditoria(pagina, porPagina) {
+    const params = new URLSearchParams({ pagina: String(pagina), por_pagina: String(porPagina) });
+    return `/api/admin/auditoria?${params.toString()}`;
+}
+
+async function carregarAuditoria() {
+    try {
+        mostrarCarregandoAuditoria();
+        adminState.auditoriaMes = document.getElementById("filtroMesAuditoria")?.value || "";
+
+        if (adminState.auditoriaMes) {
+            await carregarAuditoriaDoMes(adminState.auditoriaMes);
+        } else {
+            await carregarAuditoriaPaginada();
+        }
+    } catch (error) {
+        mostrarAdminMensagem("error", error.message);
+    }
+}
+
+async function carregarAuditoriaPaginada() {
+    const resposta = await apiRequest(montarUrlAuditoria(adminState.auditoriaPagina, adminState.auditoriaPorPagina));
+    const dados = dadosResposta(resposta);
+    const paginacao = dados.paginacao || resposta.paginacao || {};
+
+    adminState.auditorias = dados.registros || resposta.registros || dados.auditorias || resposta.auditorias || [];
+    adminState.auditoriaTotal = Number(paginacao.total || 0);
+    adminState.auditoriaTotalPaginas = Number(paginacao.total_paginas || 0);
+    adminState.auditoriaPagina = Number(paginacao.pagina || adminState.auditoriaPagina);
+
+    renderizarAuditoria();
+    renderizarPaginacaoAuditoria();
+}
+
+async function carregarAuditoriaDoMes(mes) {
+    if (adminState.auditoriaCacheMesChave !== mes) {
+        const primeiraResposta = await apiRequest(montarUrlAuditoria(1, 100));
+        const primeirosDados = dadosResposta(primeiraResposta);
+        const primeiraPaginacao = primeirosDados.paginacao || primeiraResposta.paginacao || {};
+        let todos = primeirosDados.registros || primeiraResposta.registros || [];
+        const totalPaginas = Number(primeiraPaginacao.total_paginas || 0);
+
+        for (let pagina = 2; pagina <= totalPaginas; pagina++) {
+            const resposta = await apiRequest(montarUrlAuditoria(pagina, 100));
+            const dados = dadosResposta(resposta);
+            todos = todos.concat(dados.registros || resposta.registros || []);
+        }
+
+        adminState.auditoriaCacheMes = todos.filter(registro => String(registro.criado_em || "").slice(0, 7) === mes);
+        adminState.auditoriaCacheMesChave = mes;
+    }
+
+    aplicarPaginacaoLocalAuditoria();
+}
+
+function aplicarPaginacaoLocalAuditoria() {
+    const total = adminState.auditoriaCacheMes.length;
+    const totalPaginas = total > 0 ? Math.ceil(total / adminState.auditoriaPorPagina) : 0;
+
+    if (totalPaginas > 0 && adminState.auditoriaPagina > totalPaginas) adminState.auditoriaPagina = totalPaginas;
+    if (adminState.auditoriaPagina < 1) adminState.auditoriaPagina = 1;
+
+    const inicio = (adminState.auditoriaPagina - 1) * adminState.auditoriaPorPagina;
+    const fim = inicio + adminState.auditoriaPorPagina;
+
+    adminState.auditorias = adminState.auditoriaCacheMes.slice(inicio, fim);
+    adminState.auditoriaTotal = total;
+    adminState.auditoriaTotalPaginas = totalPaginas;
+
+    renderizarAuditoria();
+    renderizarPaginacaoAuditoria();
+}
+
+function alterarMesAuditoria() {
+    adminState.auditoriaPagina = 1;
+    adminState.auditoriaCacheMes = [];
+    adminState.auditoriaCacheMesChave = null;
+    carregarAuditoria();
+}
+
+function limparFiltroMesAuditoria() {
+    const filtro = document.getElementById("filtroMesAuditoria");
+    if (filtro) filtro.value = "";
+    adminState.auditoriaPagina = 1;
+    adminState.auditoriaMes = "";
+    adminState.auditoriaCacheMes = [];
+    adminState.auditoriaCacheMesChave = null;
+    carregarAuditoria();
+}
+
+function alterarPorPaginaAuditoria() {
+    adminState.auditoriaPorPagina = Number(document.getElementById("auditoriaPorPagina").value || 25);
+    adminState.auditoriaPagina = 1;
+
+    if (adminState.auditoriaMes && adminState.auditoriaCacheMesChave === adminState.auditoriaMes) {
+        aplicarPaginacaoLocalAuditoria();
+    } else {
+        carregarAuditoria();
+    }
+}
+
+function mudarPaginaAuditoria(direcao) {
+    const novaPagina = adminState.auditoriaPagina + direcao;
+    if (novaPagina < 1 || novaPagina > adminState.auditoriaTotalPaginas) return;
+
+    adminState.auditoriaPagina = novaPagina;
+    if (adminState.auditoriaMes && adminState.auditoriaCacheMesChave === adminState.auditoriaMes) {
+        aplicarPaginacaoLocalAuditoria();
+    } else {
+        carregarAuditoria();
+    }
+}
+
+function mostrarCarregandoAuditoria() {
+    const tabela = document.getElementById("tabelaAuditoria");
+    if (tabela) tabela.innerHTML = '<tr><td colspan="6" class="text-center px-6 py-12 text-zinc-400">Carregando...</td></tr>';
+}
+
+function renderizarPaginacaoAuditoria() {
+    const resumo = document.getElementById("auditoriaResumo");
+    const pagina = document.getElementById("auditoriaPagina");
+    const anterior = document.getElementById("auditoriaAnterior");
+    const proxima = document.getElementById("auditoriaProxima");
+
+    if (adminState.auditoriaTotal === 0) {
+        resumo.textContent = "Nenhum registro encontrado.";
+        pagina.textContent = "Página 0 de 0";
+        anterior.disabled = true;
+        proxima.disabled = true;
+        return;
+    }
+
+    const inicio = (adminState.auditoriaPagina - 1) * adminState.auditoriaPorPagina + 1;
+    const fim = Math.min(adminState.auditoriaPagina * adminState.auditoriaPorPagina, adminState.auditoriaTotal);
+    resumo.textContent = `Mostrando ${inicio}–${fim} de ${adminState.auditoriaTotal} registros`;
+    pagina.textContent = `Página ${adminState.auditoriaPagina} de ${adminState.auditoriaTotalPaginas}`;
+    anterior.disabled = adminState.auditoriaPagina <= 1;
+    proxima.disabled = adminState.auditoriaPagina >= adminState.auditoriaTotalPaginas;
+}
+
+function nomeAcaoAuditoria(acao) {
+    const nomes = {
+        LOGIN_SUCCESS: "Login realizado",
+        LOGIN_FAILED: "Falha no login",
+        LOGOUT: "Logout",
+        USER_CREATED: "Usuário criado",
+        USER_UPDATED: "Usuário alterado",
+        USER_ENABLED: "Usuário ativado",
+        USER_DISABLED: "Usuário desativado",
+        USER_PASSWORD_RESET: "Senha redefinida",
+        USER_PASSWORD_CHANGED: "Senha alterada",
+        CERTIFICATE_UPLOADED: "Certificado cadastrado",
+        CERTIFICATE_REPLACED: "Certificado substituído",
+        CERTIFICATE_VALIDATION_FAILED: "Falha na validação do certificado"
+    };
+    return nomes[acao] || acao || "Ação não informada";
+}
+
+function nomeEntidadeAuditoria(entidade) {
+    const nomes = { USUARIO: "Usuário", CERTIFICADO: "Certificado", REQUISICAO: "Requisição", SISTEMA: "Sistema" };
+    return nomes[entidade] || entidade || "—";
+}
+
+function normalizarDetalhesAuditoria(detalhes) {
+    if (!detalhes) return null;
+    if (typeof detalhes === "object") return detalhes;
+    if (typeof detalhes === "string") {
+        try { return JSON.parse(detalhes); }
+        catch (error) { return { detalhes }; }
+    }
+    return { detalhes: String(detalhes) };
+}
+
+function obterDetalhesVisiveisAuditoria(detalhes) {
+    const normalizados = normalizarDetalhesAuditoria(detalhes);
+    if (!normalizados) return null;
+
+    const camposOcultos = new Set(["fingerprint_sha256", "substitui_certificado_id", "substituiu_certificado_id"]);
+    const visiveis = Object.fromEntries(Object.entries(normalizados).filter(([campo]) => !camposOcultos.has(campo)));
+    return Object.keys(visiveis).length ? visiveis : null;
+}
+
+function nomeCampoDetalheAuditoria(campo) {
+    const nomes = {
+        tipo: "Tipo",
+        titular: "Titular",
+        cnpj: "CNPJ",
+        valido_de: "Válido de",
+        valido_ate: "Válido até",
+        nome_original: "Arquivo",
+        role: "Perfil",
+        ativo: "Ativo",
+        usuario_id: "ID do usuário",
+        entidade_id: "ID da entidade",
+        motivo: "Motivo",
+        erro: "Erro",
+        mensagem: "Mensagem",
+        detalhes: "Detalhes"
+    };
+    if (nomes[campo]) return nomes[campo];
+    return String(campo).replaceAll("_", " ").replace(/\b\w/g, letra => letra.toUpperCase());
+}
+
+function formatarValorDetalheAuditoria(campo, valor) {
+    if (valor === null || valor === undefined || valor === "") return "—";
+    if (typeof valor === "boolean") return valor ? "Sim" : "Não";
+    if (["valido_de", "valido_ate", "criado_em", "ultimo_login"].includes(campo)) return formatarData(valor, true);
+    if (typeof valor === "object") return JSON.stringify(valor, null, 2);
+    return String(valor);
+}
+
+function abrirDetalhesAuditoria(indice) {
+    const auditoria = adminState.auditorias[indice];
+    if (!auditoria) return;
+
+    const detalhes = obterDetalhesVisiveisAuditoria(auditoria.detalhes);
+
+    document.getElementById("auditoriaDetalhesTitulo").textContent =
+        nomeAcaoAuditoria(auditoria.acao);
+
+    document.getElementById("auditoriaDetalhesSubtitulo").textContent =
+        `${auditoria.username || "Sistema"} • ${formatarData(auditoria.criado_em, true)}`;
+
+    const conteudo = document.getElementById("auditoriaDetalhesConteudo");
+
+    if (!detalhes) {
+        conteudo.innerHTML = `
+            <div class="py-8 text-center text-sm text-zinc-500">
+                Nenhum detalhe adicional registrado.
+            </div>
+        `;
+        abrirModal("modalDetalhesAuditoria");
+        return;
+    }
+
+    conteudo.innerHTML = `
+        <div class="flex flex-col gap-3 w-full mt-2">
+            ${Object.entries(detalhes).map(([campo, valor]) => {
+                const valorFormatado = formatarValorDetalheAuditoria(campo, valor);
+
+                // Remove espaços em branco "fantasmas" que empurravam o texto
+                const valorLimpo = String(valorFormatado).trim();
+
+                return `
+                    <div class="flex flex-col items-start justify-start w-full border-b border-zinc-100 pb-2.5 last:border-0 last:pb-0">
+
+                        <div class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 w-full text-left mb-0.5">
+                            ${escapeHtml(nomeCampoDetalheAuditoria(campo))}
+                        </div>
+
+                        <div class="text-sm font-medium text-zinc-900 w-full text-left break-words">
+                            ${escapeHtml(valorLimpo)}
+                        </div>
+
+                    </div>
+                `;
+            }).join("")}
+        </div>
+    `;
+
+    abrirModal("modalDetalhesAuditoria");
+}
+
+function renderizarAuditoria() {
+    const tabela = document.getElementById("tabelaAuditoria");
+    if (adminState.auditorias.length === 0) {
+        tabela.innerHTML = '<tr><td colspan="6" class="text-center px-6 py-12 text-zinc-400">Nenhum registro de auditoria.</td></tr>';
+        return;
+    }
+
+    tabela.innerHTML = adminState.auditorias.map((auditoria, indice) => {
+        const possuiDetalhes = Boolean(obterDetalhesVisiveisAuditoria(auditoria.detalhes));
+        return `
+            <tr class="hover:bg-zinc-50/60 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-zinc-500">${formatarData(auditoria.criado_em, true)}</td>
+                <td class="px-6 py-4">
+                    <div class="font-medium text-zinc-800">${escapeHtml(auditoria.username || "Sistema")}</div>
+                    ${auditoria.ip ? `<div class="text-xs text-zinc-400 mt-1">${escapeHtml(auditoria.ip)}</div>` : ""}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="font-medium text-zinc-700">${escapeHtml(nomeAcaoAuditoria(auditoria.acao))}</div>
+                    <div class="text-[11px] text-zinc-400 mt-1">${escapeHtml(auditoria.acao || "")}</div>
+                </td>
+                <td class="px-6 py-4 text-zinc-500">${escapeHtml(nomeEntidadeAuditoria(auditoria.entidade))}</td>
+                <td class="px-6 py-4">
+                    ${auditoria.sucesso
+                        ? '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Sucesso</span>'
+                        : '<span class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Falha</span>'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${possuiDetalhes
+                        ? `<button type="button" onclick="abrirDetalhesAuditoria(${indice})" class="inline-flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-zinc-900"><i class="fa-regular fa-eye"></i>Ver detalhes</button>`
+                        : '<span class="text-zinc-300">—</span>'}
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+// ======================================================
+// MODAIS
+// ======================================================
+function abrirModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    document.body.style.overflow =
+        "hidden";
+}
+
+function fecharModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.body.style.overflow =
+        "";
+}
+
+// ======================================================
+// INICIALIZAÇÃO
+// ======================================================
+document.addEventListener("DOMContentLoaded", async function () {
+    const filtroMes = document.getElementById("filtroMesAuditoria");
+    const porPagina = document.getElementById("auditoriaPorPagina");
+    if (filtroMes) filtroMes.value = obterMesAtual();
+    if (porPagina) porPagina.value = String(adminState.auditoriaPorPagina);
+
+    await Promise.all([
+        carregarCertificados(),
+        carregarUsuarios(),
+        carregarAuditoria()
+    ]);
+});
+</script>
+{% endblock %}

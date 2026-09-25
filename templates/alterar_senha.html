@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alterar Senha</title>
+    <link rel="icon"  href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="min-h-screen bg-[#f2f3f4] flex items-center justify-center px-5">
+    <div class="w-full max-w-[440px]">
+        <div class="bg-white border border-zinc-200 rounded-2xl shadow-sm p-7">
+            <div class="mb-7">
+                <h1 class="text-xl font-semibold text-zinc-900">
+                    Alterar senha
+                </h1>
+                <p class="text-sm text-zinc-500 mt-2">
+                    Defina uma nova senha para continuar.
+                </p>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-5 px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('auth.alterar_senha') }}" class="space-y-5">
+                <div>
+                    <label  for="senhaAtual" class="block mb-2 text-sm font-medium text-zinc-700">
+                        Senha atual
+                    </label>
+                    <div class="relative">
+                        <input type="password"  id="senhaAtual"  name="senha_atual" class="form-input pr-12" autocomplete="current-password" required>
+                        <button
+                            type="button"
+                            data-password-target="senhaAtual"
+                            onclick="alternarVisibilidadeSenha('senhaAtual', this)"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                            aria-label="Mostrar senha"
+                            title="Mostrar senha"
+                        >
+                            <svg
+                                class="icone-mostrar-senha w-5 h-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"
+                                />
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label  for="novaSenha" class="block mb-2 text-sm font-medium text-zinc-700">
+                        Nova senha
+                    </label>
+
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="novaSenha"
+                            name="nova_senha"
+                            class="form-input pr-12"
+                            autocomplete="new-password"
+                            oninput="validarSenhaDigitada()"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            data-password-target="novaSenha"
+                            onclick="alternarVisibilidadeSenha('novaSenha', this)"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                            aria-label="Mostrar senha"
+                            title="Mostrar senha"
+                        >
+
+                            <svg
+                                class="icone-mostrar-senha w-5 h-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirmarSenha" class="block mb-2 text-sm font-medium text-zinc-700">
+                        Confirmar nova senha
+                    </label>
+
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="confirmarSenha"
+                            name="confirmar_senha"
+                            class="form-input pr-12"
+                            autocomplete="new-password"
+                            oninput="validarSenhaDigitada()"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            data-password-target="confirmarSenha"
+                            onclick="alternarVisibilidadeSenha('confirmarSenha', this)"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                            aria-label="Mostrar senha"
+                            title="Mostrar senha"
+                        >
+
+                            <svg
+                                class="icone-mostrar-senha w-5 h-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                    <div class="text-xs font-medium text-zinc-600 mb-2">
+                        A nova senha deve possuir:
+                    </div>
+                    <div class="space-y-1.5 text-xs">
+                        <div id="regraTamanho" class="flex items-center gap-2 text-zinc-400">
+                            <span id="iconeRegraTamanho" class="w-4 text-center font-semibold">•</span>
+                            Pelo menos 10 caracteres
+                        </div>
+
+                        <div id="regraMaiuscula" class="flex items-center gap-2 text-zinc-400">
+                            <span id="iconeRegraMaiuscula" class="w-4 text-center font-semibold">•</span>
+                            Pelo menos uma letra maiúscula
+                        </div>
+
+                        <div id="regraMinuscula" class="flex items-center gap-2 text-zinc-400">
+                            <span id="iconeRegraMinuscula" class="w-4 text-center font-semibold">•</span>
+                            Pelo menos uma letra minúscula
+                        </div>
+
+                        <div id="regraNumero" class="flex items-center gap-2 text-zinc-400">
+                            <span id="iconeRegraNumero" class="w-4 text-center font-semibold">•</span>
+                            Pelo menos um número
+                        </div>
+
+                        <div id="regraConfirmacao" class="flex items-center gap-2 text-zinc-400">
+                            <span id="iconeRegraConfirmacao" class="w-4 text-center font-semibold">•</span>
+                            As duas novas senhas devem ser iguais
+                        </div>
+                    </div>
+                </div>
+                <button type="submit"  class="btn-dark w-full">
+                    Salvar nova senha
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function alternarVisibilidadeSenha(inputId, botao) {
+            const input =
+                document.getElementById(inputId);
+
+            if (!input) {
+                return;
+            }
+            const mostrar =
+                input.type === "password";
+
+            input.type =
+                mostrar
+                    ? "text"
+                    : "password";
+
+            const texto =
+                mostrar
+                    ? "Ocultar senha"
+                    : "Mostrar senha";
+
+            botao.setAttribute(
+                "aria-label",
+                texto
+            );
+
+            botao.setAttribute(
+                "title",
+                texto
+            );
+
+            if (mostrar) {
+
+                botao.innerHTML = `
+                    <svg
+                        class="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.8"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12s3.75 6.75 9.75 6.75c1.746 0 3.29-.571 4.58-1.387M6.228 6.228A9.89 9.89 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a18.814 18.814 0 0 1-2.16 3.098M6.228 6.228 3 3m3.228 3.228 3.11 3.11m7.324 7.324L21 21m-4.338-4.338-3.11-3.11"
+                        />
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M14.121 14.121A3 3 0 0 1 9.88 9.88"
+                        />
+                    </svg>
+                `;
+
+            }
+            else {
+                botao.innerHTML = `
+                    <svg
+                        class="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.8"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"
+                        />
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                    </svg>
+                `;
+            }
+        }
+
+        function atualizarRegra(idRegra, idIcone, valido) {
+            const regra =
+                document.getElementById(idRegra);
+
+            const icone =
+                document.getElementById(idIcone);
+
+            if (!regra || !icone) {
+                return;
+            }
+
+            regra.classList.remove(
+                "text-zinc-400",
+                "text-emerald-600"
+            );
+
+            if (valido) {
+                regra.classList.add(
+                    "text-emerald-600"
+                );
+                icone.textContent =
+                    "✓";
+
+            }
+            else {
+                regra.classList.add(
+                    "text-zinc-400"
+                );
+                icone.textContent =
+                    "•";
+            }
+        }
+
+        function validarSenhaDigitada() {
+            const senha = document.getElementById("novaSenha").value;
+            const confirmacao = document.getElementById("confirmarSenha").value;
+            atualizarRegra(
+                "regraTamanho",
+                "iconeRegraTamanho",
+                senha.length >= 10
+            );
+
+            atualizarRegra(
+                "regraMaiuscula",
+                "iconeRegraMaiuscula",
+                /[A-Z]/.test(senha)
+            );
+
+            atualizarRegra(
+                "regraMinuscula",
+                "iconeRegraMinuscula",
+                /[a-z]/.test(senha)
+            );
+
+            atualizarRegra(
+                "regraNumero",
+                "iconeRegraNumero",
+                /[0-9]/.test(senha)
+            );
+
+            atualizarRegra(
+                "regraConfirmacao",
+                "iconeRegraConfirmacao",
+                senha.length > 0
+                    &&
+                confirmacao.length > 0
+                    &&
+                senha === confirmacao
+            );
+        }
+    </script>
+</body>
+</html>

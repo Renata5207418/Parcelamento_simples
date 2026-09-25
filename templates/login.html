@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body
+    class="min-h-screen bg-[#f2f3f4] flex items-center justify-center px-5">
+    <div class="w-full max-w-[410px]">
+        <div class="text-center mb-7">
+            <div class="flex justify-center mb-5">
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Recálculo Parcelamento Simples Nacional"
+                    class="w-[155px] h-auto object-contain">
+            </div>
+            <p class="mt-1 text-sm text-zinc-500">Acesso ao sistema de emissão de Guias de Parcelamento do Simples Nacional.</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white border border-zinc-200 rounded-2xl shadow-sm p-7">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-5 px-4 py-3 rounded-lg text-sm
+                                {% if category == 'success' %}
+                                    bg-emerald-50
+                                    text-emerald-700
+                                    border
+                                    border-emerald-200
+                                {% else %}
+                                    bg-red-50
+                                    text-red-700
+                                    border
+                                    border-red-200
+                                {% endif %}
+                            "
+                        >
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('auth.login') }}" method="POST" class="space-y-5">
+                {% if request.args.get('next') %}
+                    <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+                {% endif %}
+                <div>
+                    <label for="username" class="block mb-2 text-sm font-medium text-zinc-700">
+                        Usuário
+                    </label>
+                    <input type="text" id="username" name="username" class="form-input" autocomplete="username" required autofocus>
+                </div>
+
+                <div>
+                    <label for="password" class="block mb-2 text-sm font-medium text-zinc-700">
+                        Senha
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" class="form-input pr-11" autocomplete="current-password" required>
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="
+                                absolute
+                                inset-y-0
+                                right-0
+                                w-11
+                                flex
+                                items-center
+                                justify-center
+                                text-zinc-400
+                                hover:text-zinc-700
+                            "
+                            aria-label="Mostrar senha"
+                        >
+
+                            <i
+                                class="
+                                    fa-regular
+                                    fa-eye
+                                "
+                            ></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-dark w-full">
+                    Entrar
+                </button>
+            </form>
+        </div>
+        <div  class="text-center text-xs text-zinc-400 mt-6">
+            Ambiente interno
+        </div>
+    </div>
+
+    <script>
+        const togglePassword =document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+        togglePassword.addEventListener(
+            "click",
+            function () {
+                const isPassword =
+                    passwordInput.type
+                    === "password";
+
+                passwordInput.type =
+                    isPassword
+                    ? "text"
+                    : "password";
+
+                const icon =
+                    this.querySelector(
+                        "i"
+                    );
+
+                icon.classList.toggle(
+                    "fa-eye"
+                );
+
+                icon.classList.toggle(
+                    "fa-eye-slash"
+                );
+            }
+        );
+    </script>
+</body>
+</html>

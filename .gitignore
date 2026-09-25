@@ -1,0 +1,57 @@
+# ========================
+# Segurança e Configuração
+# ========================
+.env
+.env.*
+!.env.example
+
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# ========================
+# Logs e Dados Locais
+# ========================
+*.log
+logs/
+logging
+sqlanydb
+/postgres_data
+/postgres_logs
+/certificados_runtime/
+pdfs_runtime/
+
+
+# ========================
+# IDE e Sistema Operacional
+# ========================
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Outros Scripts e Arquivos
+# ========================
+*.vbs
+*.bat
+*.zip

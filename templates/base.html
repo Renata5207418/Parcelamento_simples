@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}
+        SERPRO Parcelamento
+        {% endblock %}
+    </title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            50: "#f1fbfa",
+                            100: "#d7f4f1",
+                            500: "#2aa9a1",
+                            600: "#218a84"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+
+    <!-- ESTILOS DO COMPORTAMENTO DA SIDEBAR -->
+    <style>
+        #sidebar, #main-content, .logo-box, .logo-img {
+            transition: all 0.3s ease-in-out;
+        }
+        @media (min-width: 768px) {
+
+            /* =========================================================
+               ESTADO: FECHADO (Padrão)
+               ========================================================= */
+            body.sidebar-closed #sidebar { width: 5rem; } /* 80px */
+            body.sidebar-closed #main-content { margin-left: 5rem; }
+
+            /* Oculta os textos quando fechado */
+            body.sidebar-closed .sidebar-text {
+                display: none;
+                opacity: 0;
+            }
+
+            /* Exibe os ícones indicadores das sessões (os "...") */
+            body.sidebar-closed .sidebar-icon-collapsed {
+                display: block;
+                text-align: center;
+                margin: 0 auto;
+            }
+
+            /* Reduz o tamanho da logo */
+            body.sidebar-closed .logo-box {
+                width: 40px;
+                height: 40px;
+                border-radius: 0.5rem;
+                margin: 0 auto;
+            }
+            body.sidebar-closed .logo-img {
+                width: 28px;
+                height: 28px;
+            }
+
+            /* Centraliza os ícones do menu e botões de perfil */
+            body.sidebar-closed .sidebar-link,
+            body.sidebar-closed .logout-link {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            body.sidebar-closed .user-profile-box {
+                padding: 0.5rem 0;
+                justify-content: center;
+                background-color: transparent;
+            }
+
+            /* =========================================================
+               ESTADO: ABERTO
+               ========================================================= */
+            body.sidebar-open #sidebar { width: 16rem; } /* 256px */
+            body.sidebar-open #main-content { margin-left: 16rem; }
+
+            /* Oculta o indicador "..." quando o menu está aberto */
+            body.sidebar-open .sidebar-icon-collapsed { display: none; }
+
+            /* Revela os textos com uma animação suave */
+            body.sidebar-open .sidebar-text {
+                display: block;
+                animation: fadeInText 0.4s ease-in-out forwards;
+            }
+
+            @keyframes fadeInText {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        }
+    </style>
+    {% block head %}
+    {% endblock %}
+</head>
+<body class="bg-[#f5f6f7] text-zinc-800 sidebar-closed">
+<div class="min-h-screen flex">
+    <aside
+        id="sidebar"
+        class="
+            hidden
+            md:flex
+            bg-[#181a1d]
+            text-white
+            flex-col
+            min-h-screen
+            fixed
+            inset-y-0
+            left-0
+            z-40
+            border-r
+            border-white/5
+        "
+    >
+        <!-- Botão de expandir/retrair -->
+        <button
+            onclick="toggleSidebar()"
+            class="
+                hidden md:flex
+                absolute -right-3 top-9
+                w-6 h-6
+                bg-[#181a1d]
+                text-zinc-400
+                border border-white/10
+                rounded-full
+                items-center justify-center
+                hover:text-white hover:bg-zinc-800
+                z-50 transition-colors
+                shadow-md
+            "
+            title="Expandir/Recolher menu"
+        >
+            <i id="toggle-icon" class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+
+        <!-- Logo -->
+        <div class="px-3 pt-6 pb-7 flex items-center justify-center md:justify-start">
+            <div class="flex items-center gap-3 w-full">
+                <div
+                    class="
+                        logo-box
+                        w-[68px]
+                        h-[68px]
+                        rounded-xl
+                        bg-white
+                        flex
+                        items-center
+                        justify-center
+                        overflow-hidden
+                        flex-shrink-0
+                    "
+                >
+                    <img
+                        src="{{ url_for('static', filename='images/logo.png') }}"
+                        alt="Recálculo Parcelamento"
+                        class="
+                            logo-img
+                            w-[62px]
+                            h-[62px]
+                            object-contain
+                        "
+                    >
+                </div>
+
+                <div class="min-w-0 sidebar-text">
+                    <div class="font-semibold tracking-wide text-white">
+                        PARCELAMENTO
+                    </div>
+                    <div class="text-xs text-zinc-500 mt-0.5">
+                        Simples Nacional
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Menu -->
+        <nav class="px-3 flex-1">
+
+            <div
+                class="
+                    mb-2
+                    text-[10px]
+                    uppercase
+                    tracking-[0.16em]
+                    text-zinc-600
+                    font-semibold
+                "
+            >
+                <span class="sidebar-text px-3">Operações</span>
+                <!-- Ícone mostrado apenas quando a barra está retraída -->
+                <i class="fa-solid fa-ellipsis hidden sidebar-icon-collapsed"></i>
+            </div>
+
+            <a
+                href="{{ url_for('main.index') }}"
+                class="
+                    sidebar-link flex items-center gap-3 px-3 py-2
+                    {% if request.endpoint == 'main.index' %}
+                    sidebar-link-active
+                    {% endif %}
+                "
+            >
+                <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i>
+                <span class="sidebar-text">Envio de DAS</span>
+            </a>
+
+            <a
+                href="{{ url_for('main.consulta') }}"
+                class="
+                    sidebar-link flex items-center gap-3 px-3 py-2
+                    {% if request.endpoint == 'main.consulta' %}
+                    sidebar-link-active
+                    {% endif %}
+                "
+            >
+                <i class="fa-solid fa-magnifying-glass w-5 text-center"></i>
+                <span class="sidebar-text">Consulta de DAS</span>
+            </a>
+
+            {% if current_user.is_admin %}
+                <div
+                    class="
+                        mt-7
+                        mb-2
+                        text-[10px]
+                        uppercase
+                        tracking-[0.16em]
+                        text-zinc-600
+                        font-semibold
+                    "
+                >
+                    <span class="sidebar-text px-3">Administração</span>
+                    <!-- Ícone mostrado apenas quando a barra está retraída -->
+                    <i class="fa-solid fa-ellipsis hidden sidebar-icon-collapsed"></i>
+                </div>
+                <a
+                    href="{{ url_for('main.admin') }}"
+                    class="
+                        sidebar-link flex items-center gap-3 px-3 py-2
+                        {% if request.endpoint == 'main.admin' %}
+                        sidebar-link-active
+                        {% endif %}
+                    "
+                >
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i>
+                    <span class="sidebar-text">Administração</span>
+                </a>
+            {% endif %}
+        </nav>
+
+        <!-- Usuário -->
+        <div class="border-t border-white/5 p-4">
+
+            <div
+                class="
+                    user-profile-box
+                    flex
+                    items-center
+                    gap-3
+                    rounded-xl
+                    px-3
+                    py-3
+                    bg-white/[0.03]
+                "
+            >
+                <div
+                    class="
+                        w-9
+                        h-9
+                        rounded-full
+                        bg-zinc-700
+                        flex
+                        items-center
+                        justify-center
+                        text-sm
+                        font-semibold
+                        flex-shrink-0
+                    "
+                >
+                    {{ (current_user.nome or current_user.username or 'U')[:1] | upper }}
+                </div>
+
+                <div class="min-w-0 flex-1 sidebar-text">
+                    <div class="text-sm font-medium truncate">
+                        {{ current_user.nome or current_user.username }}
+                    </div>
+                    <div class="text-xs text-zinc-500">
+                        {{ current_user.role }}
+                    </div>
+                </div>
+            </div>
+
+            <a
+                href="{{ url_for('auth.logout') }}"
+                class="
+                    logout-link
+                    mt-2
+                    flex
+                    items-center
+                    gap-3
+                    rounded-lg
+                    px-3
+                    py-2.5
+                    text-sm
+                    text-zinc-400
+                    hover:text-white
+                    hover:bg-white/5
+                    transition
+                "
+            >
+                <i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i>
+                <span class="sidebar-text">Sair</span>
+            </a>
+        </div>
+    </aside>
+
+    <main
+        id="main-content"
+        class="
+            flex-1
+            min-w-0
+        "
+    >
+
+        <!-- Mobile -->
+        <header
+            class="
+                md:hidden
+                h-16
+                bg-[#181a1d]
+                text-white
+                flex
+                items-center
+                justify-between
+                px-5
+            "
+        >
+            <div class="flex gap-5 text-sm">
+                <a href="{{ url_for('main.index') }}">DAS</a>
+                <a href="{{ url_for('main.consulta') }}">Consulta</a>
+            </div>
+        </header>
+
+        <div
+            class="
+                max-w-[1500px]
+                mx-auto
+                px-5
+                sm:px-7
+                lg:px-10
+                py-8
+                lg:py-10
+            "
+        >
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+
+{% block scripts %}
+{% endblock %}
+
+<script>
+    function toggleSidebar() {
+        const body = document.body;
+        const toggleIcon = document.getElementById('toggle-icon');
+
+        // Alterna as classes do body
+        if (body.classList.contains('sidebar-closed')) {
+            body.classList.remove('sidebar-closed');
+            body.classList.add('sidebar-open');
+
+            // Troca o ícone para seta apontando para a esquerda
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-chevron-left');
+        } else {
+            body.classList.remove('sidebar-open');
+            body.classList.add('sidebar-closed');
+
+            // Troca o ícone para seta apontando para a direita
+            toggleIcon.classList.remove('fa-chevron-left');
+            toggleIcon.classList.add('fa-chevron-right');
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+{% block title %}
+Consulta de DAS
+{% endblock %}
+
+{% block content %}
+
+{% set partes_competencia = mesano_filtro.split('/') %}
+
+<!-- ====================================================== -->
+<!-- HEADER -->
+<!-- ====================================================== -->
+<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-8">
+    <div>
+        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 mb-2">
+            Histórico
+        </div>
+        <h1 class="text-3xl font-semibold tracking-tight text-zinc-900">
+            Consulta de DAS
+        </h1>
+        <p class="mt-2 text-sm text-zinc-500">
+            Consulte e faça download das guias já processadas.
+        </p>
+    </div>
+    <button type="button" class="btn-light" onclick="baixarGuiasPeriodo()">
+        <i class="fa-solid fa-download"></i>
+        Baixar guias do período
+    </button>
+</div>
+
+<!-- ====================================================== -->
+<!-- FILTRO -->
+<!-- ====================================================== -->
+<section class="app-card p-5 mb-6">
+    <form id="form-filtro" action="{{ url_for('main.consulta') }}" method="GET" class="flex flex-col sm:flex-row sm:items-end gap-3">
+
+        <!-- ================================================== -->
+        <!-- MÊS -->
+        <!-- ================================================== -->
+        <div>
+            <label for="mes-competencia" class="block text-sm font-medium text-zinc-700 mb-2">
+                Mês
+            </label>
+            <select id="mes-competencia" class="form-input min-w-[170px]">
+                <option value="01">
+                    Janeiro
+                </option>
+                <option value="02">
+                    Fevereiro
+                </option>
+                <option value="03">
+                    Março
+                </option>
+                <option value="04">
+                    Abril
+                </option>
+                <option value="05">
+                    Maio
+                </option>
+                <option value="06">
+                    Junho
+                </option>
+                <option value="07">
+                    Julho
+                </option>
+                <option value="08">
+                    Agosto
+                </option>
+                <option value="09">
+                    Setembro
+                </option>
+                <option value="10">
+                    Outubro
+                </option>
+                <option value="11">
+                    Novembro
+                </option>
+                <option value="12">
+                    Dezembro
+                </option>
+            </select>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- ANO -->
+        <!-- ================================================== -->
+        <div>
+            <label for="ano-competencia" class="block text-sm font-medium text-zinc-700 mb-2">
+                Ano
+            </label>
+            <select id="ano-competencia" class="form-input min-w-[120px]">
+            </select>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- VALOR ENVIADO AO BACKEND -->
+        <!-- ================================================== -->
+        <input type="hidden" id="mesano" name="mesano" value="">
+
+        <!-- ================================================== -->
+        <!-- FILTRAR -->
+        <!-- ================================================== -->
+        <button type="submit" class="btn-dark">
+            <i class="fa-solid fa-filter"></i>
+            Filtrar
+        </button>
+    </form>
+</section>
+
+<!-- ====================================================== -->
+<!-- RESUMO -->
+<!-- ====================================================== -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="app-card p-5">
+        <div class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+            Guias no período
+        </div>
+        <div class="text-3xl font-semibold text-zinc-900 mt-2">
+            {{ total_guias }}
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TABELA -->
+<!-- ====================================================== -->
+<section class="app-card overflow-hidden">
+
+    <!-- ================================================== -->
+    <!-- CABEÇALHO -->
+    <!-- ================================================== -->
+    <div class="px-6 py-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="font-semibold text-zinc-900">
+                Guias processadas
+            </h2>
+            <div id="paginacao-resumo" class="text-xs text-zinc-400 mt-1">
+            </div>
+        </div>
+        {% if requisicoes %}
+            <div class="flex items-center gap-2">
+                <label for="itens-por-pagina" class="text-xs text-zinc-500 whitespace-nowrap">
+                    Exibir
+                </label>
+                <select id="itens-por-pagina" class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 outline-none focus:border-zinc-400">
+                    <option value="20" selected>
+                        20
+                    </option>
+                    <option value="50">
+                        50
+                    </option>
+                    <option value="100">
+                        100
+                    </option>
+                </select>
+                <span class="text-xs text-zinc-500">
+                    por página
+                </span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ================================================== -->
+    <!-- TABELA -->
+    <!-- ================================================== -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-zinc-50 border-b border-zinc-100">
+                <tr class="text-left text-xs uppercase tracking-wider text-zinc-400">
+                    <th class="px-6 py-3.5 font-semibold">
+                        Empresa
+                    </th>
+                    <th class="px-6 py-3.5 font-semibold whitespace-nowrap">
+                        Código
+                    </th>
+                    <th class="px-6 py-3.5 font-semibold whitespace-nowrap">
+                        Data de envio
+                    </th>
+                    <th class="px-6 py-3.5 font-semibold">
+                        Status
+                    </th>
+                    <th class="px-6 py-3.5 font-semibold text-right">
+                        Ações
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="tabela-guias" class="divide-y divide-zinc-100">
+                {% if requisicoes %}
+                    {% for req in requisicoes %}
+                        <tr class="guia-row hover:bg-zinc-50/60 transition">
+
+                            <!-- ====================================== -->
+                            <!-- EMPRESA / CNPJ -->
+                            <!-- ====================================== -->
+                            <td class="px-6 py-4">
+                                {% if req.nome_empresa %}
+                                    <div class="font-medium text-zinc-800">
+                                        {{ req.nome_empresa }}
+                                    </div>
+                                {% else %}
+                                    <div class="font-medium text-zinc-500">
+                                        Empresa não localizada
+                                    </div>
+                                {% endif %}
+                                <div class="mt-1 text-xs font-normal text-zinc-400">
+                                    {{ req.contribuinte }}
+                                </div>
+                            </td>
+
+                            <!-- ====================================== -->
+                            <!-- CÓDIGO -->
+                            <!-- ====================================== -->
+                            <td class="px-6 py-4">
+                                {% if req.codigo_empresa %}
+                                    <span class="inline-flex items-center justify-center rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700">
+                                        {{ req.codigo_empresa }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-sm text-zinc-400">
+                                        —
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- ====================================== -->
+                            <!-- DATA -->
+                            <!-- ====================================== -->
+                            <td class="px-6 py-4 text-zinc-500 whitespace-nowrap">
+                                {{ req.data_envio }}
+                            </td>
+
+                            <!-- ====================================== -->
+                            <!-- STATUS -->
+                            <!-- ====================================== -->
+                            <td class="px-6 py-4">
+                                {% if req.status == 'Concluído' %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        {{ req.status }}
+                                    </span>
+                                {% elif req.status in ['Erro', 'Falha', 'Falhou'] %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-red-700">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                        {{ req.status }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                                        {{ req.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- ====================================== -->
+                            <!-- AÇÕES -->
+                            <!-- ====================================== -->
+                            <td class="px-6 py-4 text-right">
+                                {% if req.tem_pdf %}
+                                    <a href="{{ url_for('requisicoes.baixar_recibo', requisicao_id=req.id) }}" class="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-950">
+                                        <i class="fa-regular fa-file-pdf"></i>
+                                        PDF
+                                    </a>
+                                {% else %}
+                                    <span class="text-xs text-zinc-400">
+                                        Indisponível
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center px-6 py-16">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-4">
+                                <i class="fa-regular fa-folder-open"></i>
+                            </div>
+                            <div class="text-sm font-medium text-zinc-700">
+                                Nenhuma guia encontrada
+                            </div>
+                            <div class="text-xs text-zinc-400 mt-1">
+                                Tente selecionar outra competência.
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ================================================== -->
+    <!-- PAGINAÇÃO -->
+    <!-- ================================================== -->
+    {% if requisicoes %}
+        <div id="paginacao-container" class="px-6 py-4 border-t border-zinc-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div id="paginacao-info" class="text-xs text-zinc-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="pagina-anterior" class="inline-flex items-center justify-center h-9 px-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left text-xs mr-2"></i>
+                    Anterior
+                </button>
+                <div id="paginas" class="flex items-center gap-1">
+                </div>
+                <button type="button" id="proxima-pagina" class="inline-flex items-center justify-center h-9 px-3 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                    Próxima
+                    <i class="fa-solid fa-chevron-right text-xs ml-2"></i>
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ======================================================
+// ELEMENTOS DA COMPETÊNCIA
+// ======================================================
+
+const formFiltro = document.getElementById("form-filtro");
+const mesCompetencia = document.getElementById("mes-competencia");
+const anoCompetencia = document.getElementById("ano-competencia");
+const mesanoInput = document.getElementById("mesano");
+
+// ======================================================
+// COMPETÊNCIA RECEBIDA DO BACKEND
+// ======================================================
+
+const competenciaRecebida = {{ mesano_filtro | tojson }};
+const competenciaLimpa = String(competenciaRecebida || "").replace(/\D/g, "");
+let mesAtualFiltro = "";
+let anoAtualFiltro = "";
+if (competenciaLimpa.length === 6) {
+    mesAtualFiltro = competenciaLimpa.slice(0, 2);
+    anoAtualFiltro = competenciaLimpa.slice(2, 6);
+}
+
+// ======================================================
+// PREENCHER ANOS
+// ======================================================
+
+function preencherAnos() {
+    if (!anoCompetencia) {
+        return;
+    }
+    const hoje = new Date();
+    const anoSistema = hoje.getFullYear();
+    const anoSelecionado = parseInt(anoAtualFiltro, 10);
+    let anoInicial = anoSistema - 8;
+    let anoFinal = anoSistema + 1;
+    if (!isNaN(anoSelecionado)) {
+        anoInicial = Math.min(anoInicial, anoSelecionado);
+        anoFinal = Math.max(anoFinal, anoSelecionado);
+    }
+    anoCompetencia.innerHTML = "";
+    for (let ano = anoFinal; ano >= anoInicial; ano--) {
+        const option = document.createElement("option");
+        option.value = String(ano);
+        option.textContent = String(ano);
+        anoCompetencia.appendChild(option);
+    }
+    // --------------------------------------------------
+    // IMPORTANTE:
+    // seleciona o ano SOMENTE depois que todas as opções
+    // já foram inseridas no select.
+    // --------------------------------------------------
+    if (!isNaN(anoSelecionado)) {
+        anoCompetencia.value = String(anoSelecionado);
+    }
+    else {
+        anoCompetencia.value = String(anoSistema);
+    }
+}
+preencherAnos();
+
+// ======================================================
+// SELECIONAR MÊS RECEBIDO DO BACKEND
+// ======================================================
+
+if (mesCompetencia && mesAtualFiltro) {
+    mesCompetencia.value = mesAtualFiltro;
+}
+
+// ======================================================
+// MONTAR MMYYYY
+// ======================================================
+
+function obterMesAnoSelecionado() {
+    if (!mesCompetencia || !anoCompetencia) {
+        return "";
+    }
+    const mes = mesCompetencia.value;
+    const ano = anoCompetencia.value;
+    if (!mes || !ano) {
+        return "";
+    }
+    return (mes + ano);
+}
+
+// ======================================================
+// SUBMISSÃO DO FILTRO
+// ======================================================
+
+if (formFiltro) {
+    formFiltro.addEventListener("submit", function (event) {
+        const mesano = obterMesAnoSelecionado();
+        if (!mesano) {
+            event.preventDefault();
+            alert("Selecione a competência.");
+            return;
+        }
+        mesanoInput.value = mesano;
+    });
+}
+
+// ======================================================
+// DOWNLOAD DO PERÍODO
+// ======================================================
+
+function baixarGuiasPeriodo() {
+    const mesano = obterMesAnoSelecionado();
+    if (!mesano) {
+        alert("Selecione a competência.");
+        return;
+    }
+    window.location.href = "/baixar_todos_recibos" + "?mesano=" + encodeURIComponent(mesano);
+}
+
+// ======================================================
+// PAGINAÇÃO
+// ======================================================
+
+const linhas = Array.from(document.querySelectorAll(".guia-row"));
+const selectItensPorPagina = document.getElementById("itens-por-pagina");
+const botaoAnterior = document.getElementById("pagina-anterior");
+const botaoProxima = document.getElementById("proxima-pagina");
+const paginasContainer = document.getElementById("paginas");
+const paginacaoInfo = document.getElementById("paginacao-info");
+const paginacaoResumo = document.getElementById("paginacao-resumo");
+let paginaAtual = 1;
+let itensPorPagina = selectItensPorPagina ? parseInt(selectItensPorPagina.value, 10) : 20;
+function obterTotalPaginas() {
+    if (linhas.length === 0) {
+        return 1;
+    }
+    return Math.ceil(linhas.length / itensPorPagina);
+}
+function criarBotaoPagina(numero) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.textContent = numero;
+    botao.className = [
+        "inline-flex",
+        "items-center",
+        "justify-center",
+        "w-9",
+        "h-9",
+        "rounded-lg",
+        "border",
+        "text-sm",
+        "transition"
+    ].join(" ");
+    if (numero === paginaAtual) {
+        botao.classList.add("bg-zinc-900", "border-zinc-900", "text-white");
+    }
+    else {
+        botao.classList.add("bg-white", "border-zinc-200", "text-zinc-600", "hover:bg-zinc-50");
+    }
+    botao.addEventListener("click", function () {
+        paginaAtual = numero;
+        atualizarPaginacao();
+    });
+    return botao;
+}
+function criarReticencias() {
+    const elemento = document.createElement("span");
+    elemento.textContent = "...";
+    elemento.className = [
+        "inline-flex",
+        "items-center",
+        "justify-center",
+        "w-8",
+        "h-9",
+        "text-sm",
+        "text-zinc-400"
+    ].join(" ");
+    return elemento;
+}
+function renderizarBotoesPaginas() {
+    if (!paginasContainer) {
+        return;
+    }
+    paginasContainer.innerHTML = "";
+    const totalPaginas = obterTotalPaginas();
+    if (totalPaginas <= 1) {
+        return;
+    }
+    const paginas = [];
+    if (totalPaginas <= 7) {
+        for (let numero = 1; numero <= totalPaginas; numero++) {
+            paginas.push(numero);
+        }
+    }
+    else {
+        paginas.push(1);
+        let inicio = Math.max(2, paginaAtual - 1);
+        let fim = Math.min(totalPaginas - 1, paginaAtual + 1);
+        if (paginaAtual <= 3) {
+            inicio = 2;
+            fim = 4;
+        }
+        if (paginaAtual >= totalPaginas - 2) {
+            inicio = totalPaginas - 3;
+            fim = totalPaginas - 1;
+        }
+        if (inicio > 2) {
+            paginas.push("...");
+        }
+        for (let numero = inicio; numero <= fim; numero++) {
+            paginas.push(numero);
+        }
+        if (fim < totalPaginas - 1) {
+            paginas.push("...");
+        }
+        paginas.push(totalPaginas);
+    }
+    paginas.forEach(function (pagina) {
+        if (pagina === "...") {
+            paginasContainer.appendChild(criarReticencias());
+        }
+        else {
+            paginasContainer.appendChild(criarBotaoPagina(pagina));
+        }
+    });
+}
+function atualizarPaginacao() {
+    if (linhas.length === 0) {
+        return;
+    }
+    const totalPaginas = obterTotalPaginas();
+    if (paginaAtual > totalPaginas) {
+        paginaAtual = totalPaginas;
+    }
+    const indiceInicial = (paginaAtual - 1) * itensPorPagina;
+    const indiceFinal = indiceInicial + itensPorPagina;
+    linhas.forEach(function (linha, indice) {
+        if (indice >= indiceInicial && indice < indiceFinal) {
+            linha.style.display = "";
+        }
+        else {
+            linha.style.display = "none";
+        }
+    });
+    const primeiroItem = indiceInicial + 1;
+    const ultimoItem = Math.min(indiceFinal, linhas.length);
+    if (paginacaoInfo) {
+        paginacaoInfo.textContent = "Mostrando " + primeiroItem + "–" + ultimoItem + " de " + linhas.length + " guias";
+    }
+    if (paginacaoResumo) {
+        paginacaoResumo.textContent = "Mostrando " + primeiroItem + "–" + ultimoItem + " de " + linhas.length;
+    }
+    if (botaoAnterior) {
+        botaoAnterior.disabled = paginaAtual === 1;
+    }
+    if (botaoProxima) {
+        botaoProxima.disabled = paginaAtual === totalPaginas;
+    }
+    renderizarBotoesPaginas();
+}
+
+// ======================================================
+// EVENTOS
+// ======================================================
+
+if (selectItensPorPagina) {
+    selectItensPorPagina.addEventListener("change", function () {
+        itensPorPagina = parseInt(this.value, 10);
+        paginaAtual = 1;
+        atualizarPaginacao();
+    });
+}
+if (botaoAnterior) {
+    botaoAnterior.addEventListener("click", function () {
+        if (paginaAtual > 1) {
+            paginaAtual--;
+            atualizarPaginacao();
+        }
+    });
+}
+if (botaoProxima) {
+    botaoProxima.addEventListener("click", function () {
+        const totalPaginas = obterTotalPaginas();
+        if (paginaAtual < totalPaginas) {
+            paginaAtual++;
+            atualizarPaginacao();
+        }
+    });
+}
+
+// ======================================================
+// INICIALIZAÇÃO
+// ======================================================
+
+atualizarPaginacao();
+</script>
+{% endblock %}

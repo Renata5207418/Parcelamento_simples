@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block title %}
+Envio de DAS
+{% endblock %}
+
+{% block content %}
+
+<!-- ====================================================== -->
+<!-- CABEÇALHO -->
+<!-- ====================================================== -->
+<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
+    <div>
+        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 mb-2">
+            Parcelamento
+        </div>
+        <h1 class="text-3xl font-semibold tracking-tight text-zinc-900">
+            Envio de DAS
+        </h1>
+        <p class="mt-2 text-sm text-zinc-500">
+            Emita uma guia individual ou processe empresas em lote.
+        </p>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- ALERTAS -->
+<!-- ====================================================== -->
+<div id="globalMessage" class="hidden mb-6"></div>
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6 items-start">
+
+    <!-- ================================================== -->
+    <!-- EMISSÃO INDIVIDUAL -->
+    <!-- ================================================== -->
+    <section class="app-card">
+        <div class="flex items-start gap-4 px-6 py-5 border-b border-zinc-100">
+            <div class="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+                <h2 class="font-semibold text-zinc-900">
+                    Emissão individual
+                </h2>
+                <p class="text-sm text-zinc-500 mt-1">
+                    Gere uma guia para um contribuinte.
+                </p>
+            </div>
+        </div>
+        <form id="dasForm" class="p-6 space-y-7">
+            <!-- Contribuinte -->
+            <div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">
+                    Contribuinte
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label for="contribuinte" class="block text-sm font-medium text-zinc-700 mb-2">
+                            Código do contribuinte
+                        </label>
+                        <input type="text" id="contribuinte" name="contribuinte" class="form-input" placeholder="CPF ou CNPJ" required>
+                    </div>
+                    <div>
+                        <label for="tipo_contribuinte" class="block text-sm font-medium text-zinc-700 mb-2">
+                            Tipo
+                        </label>
+                        <select id="tipo_contribuinte" name="tipo_contribuinte" class="form-select" required>
+                            <option value="2">
+                                CNPJ
+                            </option>
+                            <option value="1">
+                                CPF
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-zinc-100"></div>
+            <!-- Parcelamento -->
+            <div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">
+                    Parcelamento
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label for="id_sistema" class="block text-sm font-medium text-zinc-700 mb-2">
+                            Modalidade
+                        </label>
+                        <select id="id_sistema" name="id_sistema" class="form-select" required>
+                            <option value="">
+                                Selecione...
+                            </option>
+                            <option value="PARCSN">
+                                Parcelamento Simples Nacional
+                            </option>
+                            <option value="PARCSN-ESP">
+                                Parcelamento Simples Nacional Especial
+                            </option>
+                            <option value="PERTSN">
+                                PERT Simples Nacional
+                            </option>
+                            <option value="RELPSN">
+                                RELP Simples Nacional
+                            </option>
+                            <option value="PARCMEI">
+                                Parcelamento MEI
+                            </option>
+                            <option value="PARCMEI-ESP">
+                                Parcelamento MEI Especial
+                            </option>
+                            <option value="PERTMEI">
+                                PERT MEI
+                            </option>
+                            <option value="RELPMEI">
+                                RELP MEI
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="id_servico" class="block text-sm font-medium text-zinc-700 mb-2">
+                            Serviço
+                        </label>
+                        <input type="text" id="id_servico" name="id_servico" class="form-input" readonly required>
+                    </div>
+                    <div>
+                        <label for="parcela_para_emitir" class="block text-sm font-medium text-zinc-700 mb-2">
+                            Competência
+                        </label>
+                        <input type="text" id="parcela_para_emitir" name="parcela_para_emitir" class="form-input" maxlength="6" inputmode="numeric" placeholder="AAAAMM" required>
+                        <div class="text-xs text-zinc-400 mt-2">
+                            Exemplo: 202609
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button id="dasSubmitButton" type="submit" class="btn-dark min-w-[150px]">
+                    <span id="dasButtonText">
+                        Gerar DAS
+                    </span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- ================================================== -->
+    <!-- ENVIO EM LOTE -->
+    <!-- ================================================== -->
+    <section class="app-card">
+        <div class="px-6 py-5 border-b border-zinc-100">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600">
+                    <i class="fa-solid fa-table"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-zinc-900">
+                        Envio em lote
+                    </h2>
+                    <p class="text-sm text-zinc-500 mt-1">
+                        Processe empresas através de uma planilha XLSX.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <form id="batchUploadForm" class="p-6" enctype="multipart/form-data">
+            <label for="fileUpload" class="block border border-dashed border-zinc-300 rounded-xl px-5 py-8 text-center cursor-pointer hover:bg-zinc-50 transition">
+                <div class="w-11 h-11 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 mb-3">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                </div>
+                <div class="text-sm font-medium text-zinc-700">
+                    Selecionar planilha
+                </div>
+                <div class="text-xs text-zinc-400 mt-1">
+                    Arquivo .xlsx
+                </div>
+                <div id="selectedFileName" class="text-xs font-medium text-accent-600 mt-3 hidden"></div>
+                <input type="file" id="fileUpload" name="fileUpload" accept=".xlsx" class="hidden" required>
+            </label>
+            <div class="flex items-center justify-between gap-4 mt-4 px-1">
+                <div class="text-xs text-zinc-500">
+                    Utilize o modelo padrão para evitar erros na importação.
+                </div>
+                <a href="/modelo_planilha_lote" class="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 hover:text-zinc-900 whitespace-nowrap transition">
+                    <i class="fa-solid fa-download"></i>
+                    Baixar modelo
+                </a>
+            </div>
+            <button type="submit" id="batchSubmitButton" class="btn-dark w-full mt-5">
+                <span id="batchButtonText">
+                    Processar planilha
+                </span>
+            </button>
+        </form>
+        <div id="batchResults" class="hidden border-t border-zinc-100 px-6 py-5"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ======================================================
+// SERVIÇOS
+// ======================================================
+const servicoOptions = {
+    "PARCSN": "GERARDAS161",
+    "PARCSN-ESP": "GERARDAS171",
+    "PERTSN": "GERARDAS181",
+    "RELPSN": "GERARDAS191",
+    "PARCMEI": "GERARDAS201",
+    "PARCMEI-ESP": "GERARDAS211",
+    "PERTMEI": "GERARDAS221",
+    "RELPMEI": "GERARDAS231"
+};
+
+const sistemaSelect = document.getElementById("id_sistema");
+const servicoInput = document.getElementById("id_servico");
+
+sistemaSelect.addEventListener("change", function () {
+    servicoInput.value = servicoOptions[this.value] || "";
+});
+
+// ======================================================
+// COMPETÊNCIA
+// ======================================================
+const parcelaInput = document.getElementById("parcela_para_emitir");
+
+parcelaInput.addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 6);
+});
+
+// ======================================================
+// ALERTA
+// ======================================================
+function mostrarMensagem(tipo, mensagem) {
+    const container = document.getElementById("globalMessage");
+
+    const estilos = {
+        success: "bg-emerald-50 border-emerald-200 text-emerald-700",
+        error: "bg-red-50 border-red-200 text-red-700",
+        info: "bg-zinc-100 border-zinc-200 text-zinc-700"
+    };
+
+    container.className = `
+        mb-6
+        border
+        rounded-xl
+        px-4
+        py-3
+        text-sm
+        ${estilos[tipo] || estilos.info}
+    `;
+
+    container.textContent = mensagem;
+}
+
+// ======================================================
+// GERAR DAS
+// ======================================================
+const dasForm = document.getElementById("dasForm");
+const dasButton = document.getElementById("dasSubmitButton");
+const dasButtonText = document.getElementById("dasButtonText");
+
+dasForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    dasButton.disabled = true;
+    dasButtonText.innerHTML = `
+        <span class="flex items-center gap-2">
+            <span class="spinner"></span>
+            Gerando...
+        </span>
+    `;
+
+    try {
+        const response = await fetch("/gerar_das", {
+            method: "POST",
+            body: new FormData(dasForm)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+            throw new Error(
+                data.message
+                || data.mensagem
+                || data.error
+                || "Não foi possível gerar a DAS."
+            );
+        }
+
+        mostrarMensagem(
+            "success",
+            data.message || "Documento DAS gerado com sucesso."
+        );
+
+        dasForm.reset();
+        servicoInput.value = "";
+    } catch (error) {
+        mostrarMensagem("error", error.message);
+    } finally {
+        dasButton.disabled = false;
+        dasButtonText.textContent = "Gerar DAS";
+    }
+});
+
+// ======================================================
+// ARQUIVO
+// ======================================================
+const fileUpload = document.getElementById("fileUpload");
+const selectedFileName = document.getElementById("selectedFileName");
+
+fileUpload.addEventListener("change", function () {
+    if (this.files.length) {
+        selectedFileName.textContent = this.files[0].name;
+        selectedFileName.classList.remove("hidden");
+    } else {
+        selectedFileName.textContent = "";
+        selectedFileName.classList.add("hidden");
+    }
+});
+
+// ======================================================
+// LOTE
+// ======================================================
+const batchForm = document.getElementById("batchUploadForm");
+const batchButton = document.getElementById("batchSubmitButton");
+const batchButtonText = document.getElementById("batchButtonText");
+const batchResults = document.getElementById("batchResults");
+
+batchForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    batchButton.disabled = true;
+    batchButtonText.innerHTML = `
+        <span class="flex items-center gap-2">
+            <span class="spinner"></span>
+            Processando...
+        </span>
+    `;
+
+    batchResults.classList.add("hidden");
+
+    try {
+        const response = await fetch("/enviar_em_lote", {
+            method: "POST",
+            body: new FormData(batchForm)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+            throw new Error(
+                data.message
+                || data.error
+                || "Erro ao processar a planilha."
+            );
+        }
+
+        renderizarResultadosLote(data.resultados || []);
+
+        mostrarMensagem(
+            "success",
+            data.message || "Processamento concluído."
+        );
+    } catch (error) {
+        mostrarMensagem("error", error.message);
+    } finally {
+        batchButton.disabled = false;
+        batchButtonText.textContent = "Processar planilha";
+    }
+});
+
+function renderizarResultadosLote(resultados) {
+    batchResults.innerHTML = "";
+
+    const titulo = document.createElement("div");
+    titulo.className = "text-sm font-semibold text-zinc-800 mb-4";
+    titulo.textContent = "Resultado do processamento";
+    batchResults.appendChild(titulo);
+
+    if (resultados.length === 0) {
+        const vazio = document.createElement("div");
+        vazio.className = "text-sm text-zinc-500";
+        vazio.textContent = "Nenhum resultado retornado.";
+        batchResults.appendChild(vazio);
+        batchResults.classList.remove("hidden");
+        return;
+    }
+
+    const lista = document.createElement("div");
+    lista.className = "space-y-2";
+
+    resultados.forEach(function (item) {
+        const linha = document.createElement("div");
+        const sucesso = String(item.status || "")
+            .toLowerCase()
+            .includes("sucesso");
+
+        linha.className = `
+            rounded-lg
+            border
+            px-3
+            py-3
+            text-xs
+            ${sucesso
+                ? "bg-emerald-50 border-emerald-100"
+                : "bg-red-50 border-red-100"}
+        `;
+
+        const cnpj = document.createElement("div");
+        cnpj.className = "font-semibold text-zinc-800";
+        cnpj.textContent = item.CNPJ || "Contribuinte";
+
+        const mensagem = document.createElement("div");
+        mensagem.className = "mt-1 text-zinc-600";
+        mensagem.textContent = item.mensagem || item.status || "";
+
+        linha.appendChild(cnpj);
+        linha.appendChild(mensagem);
+        lista.appendChild(linha);
+    });
+
+    batchResults.appendChild(lista);
+    batchResults.classList.remove("hidden");
+}
+</script>
+{% endblock %}
