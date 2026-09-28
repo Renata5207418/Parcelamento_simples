@@ -728,7 +728,7 @@ def cadastrar_certificado(
             tipo=tipo,
             nome_original=nome_original,
             arquivo_relativo=(arquivo_relativo.as_posix()),
-            senha_criptografada=(senha_criptografada),
+            senha_criptografada=senha_criptografada,
             titular=metadata["titular"],
             emissor=metadata["emissor"],
             cnpj=metadata["cnpj"],
@@ -782,6 +782,40 @@ def remover_arquivo_certificado(certificado):
 
     except OSError:
         pass
+
+
+
+def desativar_certificado(certificado_id, tipo=None):
+    """
+    Desativa um certificado cadastrado sem remover
+    o registro do banco nem o arquivo físico.
+
+    IMPORTANTE:
+    esta função NÃO executa session.commit().
+    """
+    if tipo is not None:
+        tipo = validar_tipo_certificado(tipo)
+
+    query = session.query(Certificado).filter(
+        Certificado.id == certificado_id,
+    )
+
+    if tipo is not None:
+        query = query.filter(Certificado.tipo == tipo)
+
+    certificado = query.first()
+
+    if certificado is None:
+        raise CertificadoNaoEncontradoError(
+            "Certificado não encontrado."
+        )
+
+    if certificado.ativo:
+        certificado.ativo = False
+        certificado.desativado_em = agora_utc()
+        session.flush()
+
+    return certificado
 
 
 def obter_certificado_ativo(tipo, obrigatorio=True):

@@ -3,6 +3,7 @@ from flask_login import current_user
 from sqlalchemy import func
 
 from auth.audit_service import (
+    ACAO_CERTIFICADO_DESATIVADO,
     ACAO_CERTIFICADO_ENVIADO,
     ACAO_CERTIFICADO_SUBSTITUIDO,
     ACAO_CERTIFICADO_VALIDACAO_FALHOU,
@@ -23,11 +24,13 @@ from auth.auth_utils import (
 from auth.certificate_service import (
     CertificateServiceError,
     cadastrar_certificado,
+    desativar_certificado,
     listar_certificados,
     remover_arquivo_certificado,
     serializar_certificado,
 )
 from database.models import (
+    CERTIFICADO_AUTOR,
     ROLE_ADMIN,
     ROLE_USER,
     Auditoria,
@@ -768,6 +771,61 @@ def enviar_certificado():
         session.rollback()
         if novo_certificado is not None:
             remover_arquivo_certificado(novo_certificado)
+        raise
+
+
+# ============================================================
+# CERTIFICADOS - DESATIVAR AUTOR / PROCURADOR
+# ============================================================
+@admin_bp.route("/certificados/<int:certificado_id>/desativar", methods=["PATCH"])
+@admin_required
+def desativar_certificado_autor(certificado_id):
+    """
+    Desativa o certificado AUTOR utilizado para
+    assinatura do termo de procuração.
+
+    O certificado MTLS não pode ser desativado
+    por esta rota, pois é necessário para a
+    autenticação com o SERPRO.
+    """
+    try:
+        certificado = desativar_certificado(
+            certificado_id=certificado_id,
+            tipo=CERTIFICADO_AUTOR,
+        )
+
+        registrar_auditoria(
+            acao=ACAO_CERTIFICADO_DESATIVADO,
+            entidade="CERTIFICADO",
+            entidade_id=certificado.id,
+            detalhes={
+                "tipo": certificado.tipo,
+                "titular": certificado.titular,
+                "cnpj": certificado.cnpj,
+                "nome_arquivo": certificado.nome_original,
+                "desativado_em": certificado.desativado_em,
+            },
+        )
+
+        session.commit()
+
+        return resposta_ok(
+            serializar_certificado(certificado),
+            message=(
+                "Certificado do procurador inativado com sucesso. "
+                "Ele não será utilizado enquanto permanecer inativo."
+            ),
+        )
+
+    except CertificateServiceError as exc:
+        session.rollback()
+        return resposta_erro(
+            str(exc),
+            error=exc.__class__.__name__,
+        )
+
+    except Exception:
+        session.rollback()
         raise
 
 

@@ -38,6 +38,7 @@ sqlanydb
 /postgres_logs
 /certificados_runtime/
 pdfs_runtime/
+*.dump
 
 
 # ========================

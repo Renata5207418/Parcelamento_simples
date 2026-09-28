@@ -2,10 +2,9 @@ import datetime
 import json
 import logging
 import re
-
 import requests
 from decouple import config
-
+from auth.certificate_service import CertificadoNaoEncontradoError
 from database.models import Requisicao, session
 from utils_serpro.serpro_auth import obter_token_autenticacao
 from utils_serpro.termo_procurador import gerar_token_procurador
@@ -141,6 +140,15 @@ def enviar_parcelamento(
 
             if not token_proc:
                 return None, "Falha Procuração: token de procurador não foi retornado."
+
+        except CertificadoNaoEncontradoError:
+            mensagem = (
+                "A operação exige procuração porque CNPJ_CONT e AUTOR_PEDIDO "
+                "são diferentes, mas não existe certificado AUTOR ativo. "
+                "Cadastre ou substitua o certificado do procurador na Administração."
+            )
+            logging.error(mensagem)
+            return None, f"Falha Procuração: {mensagem}"
 
         except Exception as e:
             logging.error(f"Falha na fase de procuração: {e}")

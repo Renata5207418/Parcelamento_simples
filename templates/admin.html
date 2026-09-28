@@ -921,18 +921,61 @@ function montarCardCertificado(tipo, titulo, descricao) {
                     ${campoCertificado("Válido até", formatarData(certificado.valido_ate))}
                     ${campoCertificado("Validade", textoDias || "—")}
                 </div>
-                <div class="mt-6 pt-5 border-t border-zinc-100 flex items-center justify-between gap-4">
+                <div class="mt-6 pt-5 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="text-xs text-zinc-400 truncate">
                         ${escapeHtml(certificado.nome_original || "")}
                     </div>
 
-                    <button type="button" onclick="abrirModalCertificado('${tipo}')" class="btn-light">
-                        <i class="fa-solid fa-rotate"></i>
-                        Substituir
-                    </button>
+                    <div class="flex items-center gap-2">
+                        ${tipo === "AUTOR"
+                            ? `
+                                <button type="button" onclick="desativarCertificadoAutor(${certificado.id})" class="btn-light text-red-600 hover:text-red-700">
+                                    <i class="fa-solid fa-ban"></i>
+                                    Inativar
+                                </button>
+                            `
+                            : ""}
+
+                        <button type="button" onclick="abrirModalCertificado('${tipo}')" class="btn-light">
+                            <i class="fa-solid fa-rotate"></i>
+                            Substituir
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
+}
+
+async function desativarCertificadoAutor(certificadoId) {
+    const confirmado = window.confirm(
+        "Inativar o certificado do procurador?\n\n"
+        + "Ele deixará de ser utilizado para gerar o token de procuração.\n"
+        + "Se CNPJ_CONT e AUTOR_PEDIDO forem diferentes, as solicitações dependerão de um novo certificado AUTOR ativo."
+    );
+
+    if (!confirmado) {
+        return;
+    }
+
+    try {
+        const resposta = await apiRequest(
+            `/api/admin/certificados/${certificadoId}/desativar`,
+            {
+                method: "PATCH"
+            }
+        );
+
+        mostrarAdminMensagem(
+            "success",
+            resposta.message
+                || "Certificado do procurador inativado com sucesso."
+        );
+
+        await carregarCertificados();
+    }
+    catch (error) {
+        mostrarAdminMensagem("error", error.message);
+    }
 }
 
 function campoCertificado(label, valor) {
@@ -952,7 +995,7 @@ function renderizarCertificados() {
     document.getElementById("certificadoMTLS").innerHTML =
         montarCardCertificado("MTLS", "Autenticação SERPRO", "Certificado utilizado na autenticação mTLS.");
     document.getElementById("certificadoAUTOR").innerHTML =
-        montarCardCertificado("AUTOR", "Assinatura do procurador", "Certificado utilizado para assinatura do termo.");
+        montarCardCertificado("AUTOR", "Assinatura do procurador", "Certificado opcional, utilizado somente quando Contratante e Autor do Pedido são CNPJs diferentes.");
     const tabela = document.getElementById("tabelaCertificados");
     if (adminState.certificados.length === 0) {
         tabela.innerHTML = `
@@ -992,7 +1035,7 @@ function renderizarCertificados() {
                                     `
                 : `
                                         <span class="text-xs text-zinc-400">
-                                            Substituído
+                                            Inativo
                                         </span>
                                     `}
 
@@ -1525,6 +1568,7 @@ function nomeAcaoAuditoria(acao) {
         USER_PASSWORD_CHANGED: "Senha alterada",
         CERTIFICATE_UPLOADED: "Certificado cadastrado",
         CERTIFICATE_REPLACED: "Certificado substituído",
+        CERTIFICATE_DISABLED: "Certificado inativado",
         CERTIFICATE_VALIDATION_FAILED: "Falha na validação do certificado"
     };
     return nomes[acao] || acao || "Ação não informada";
