@@ -228,6 +228,18 @@
                 <i class="fa-solid fa-magnifying-glass w-5 text-center"></i>
                 <span class="sidebar-text">Consulta de DAS</span>
             </a>
+            <a
+                href="{{ url_for('main.manual') }}"
+                class="
+                    sidebar-link flex items-center gap-3 px-3 py-2
+                    {% if request.endpoint == 'main.manual' %}
+                    sidebar-link-active
+                    {% endif %}
+                "
+            >
+                <i class="fa-solid fa-book-open w-5 text-center"></i>
+                <span class="sidebar-text">Manual de Uso</span>
+            </a>
 
             {% if current_user.is_admin %}
                 <div
@@ -350,6 +362,7 @@
             <div class="flex gap-5 text-sm">
                 <a href="{{ url_for('main.index') }}">DAS</a>
                 <a href="{{ url_for('main.consulta') }}">Consulta</a>
+                <a href="{{ url_for('main.manual') }}">Manual</a>
             </div>
         </header>
 

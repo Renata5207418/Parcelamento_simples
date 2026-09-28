@@ -1,7 +1,5 @@
 import datetime
-
 from flask import Blueprint, render_template, request
-
 from auth.auth_utils import admin_required, password_change_required
 from database.banco_dominio import get_empresas_por_cnpjs, normalizar_cnpj
 from database.models import Requisicao, session
@@ -11,8 +9,6 @@ main_bp = Blueprint("main", __name__)
 # ============================================================
 # INDEX
 # ============================================================
-
-
 @main_bp.route("/", methods=["GET"])
 @password_change_required
 def index():
@@ -126,6 +122,17 @@ def consulta():
         mesano_filtro=mesano_visualizacao,
     )
 
+
+# ============================================================
+# MANUAL DE USO
+# ============================================================
+@main_bp.route("/manual",  methods=["GET"])
+@password_change_required
+def manual():
+    """
+    Exibe o manual de uso da aplicação.
+    """
+    return render_template("manual.html")
 
 # ============================================================
 # ADMINISTRAÇÃO

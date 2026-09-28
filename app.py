@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
-
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-
 from auth.auth_utils import init_auth
 from database.models import init_db, shutdown_session
 from routes import registrar_rotas
